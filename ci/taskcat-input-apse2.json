@@ -1,0 +1,39 @@
+[
+    {
+      "ParameterKey": "DBUser",
+      "ParameterValue": "dbuser"
+    },
+    {
+      "ParameterKey": "DBPassword",
+      "ParameterValue": "$[taskcat_genpass_8A]"
+    },
+    {
+      "ParameterKey": "TagPrefix",
+      "ParameterValue": "irapqs"
+    },
+    {
+      "ParameterKey": "KeyPairName",
+      "ParameterValue": "override"
+    },
+    {
+      "ParameterKey": "LambdaBucket",
+      "ParameterValue": "irapqs-s3-$[taskcat_random-string]"
+    },
+    {
+      "ParameterKey": "LambdaZipsBucket",
+      "ParameterValue": "protrefarch-apse2-zipbucket"
+    },
+    {
+      "ParameterKey": "SnsEmail",
+      "ParameterValue": "override"
+    },
+    {
+      "ParameterKey": "KMSAdmin",
+      "ParameterValue": "override"
+    },
+    {
+      "ParameterKey": "KMSUser",
+      "ParameterValue": "override"
+    }
+  ]
+  

@@ -1,5 +1,9 @@
 [
     {
+      "ParameterKey": "AvailabilityZones",
+      "ParameterValue": "us-east-1a,us-east-1b,us-east-1c,us-east-1d"
+    },
+    {
       "ParameterKey": "DBUser",
       "ParameterValue": "dbuser"
     },
@@ -8,11 +12,7 @@
       "ParameterValue": "$[taskcat_genpass_8A]"
     },
     {
-      "ParameterKey": "TagPrefix",
-      "ParameterValue": "irapqs"
-    },
-    {
-      "ParameterKey": "KeyPairName",
+      "ParameterKey": "ASGKeyPairName",
       "ParameterValue": "override"
     },
     {

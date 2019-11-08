@@ -1,30 +1,30 @@
 ---
 global:
   owner: quickstart-eng@amazon.com
-  qsname: quickstart-compliance-irap-protected
+  qsname: irap-protected-qs
   regions:
     - us-east-1
     - ap-southeast-2
     - ap-southeast-1
     - us-west-2
 tests:
-  quickstart-compliance-irap-protected-use1:
-    parameter_input: taskcat-input-use1.json
-    regions:
-      - us-east-1
-    template_file: master.yml
-  quickstart-compliance-irap-protected-apse2:
+  # taskcat-use1:
+  #   parameter_input: taskcat-input-use1.json
+  #   regions:
+  #     - us-east-1
+  #   template_file: master.yml
+  taskcat-apse2:
     parameter_input: taskcat-input-apse2.json
     regions:
       - ap-southeast-2
     template_file: master.yml
-  quickstart-compliance-irap-protected-apse1:
-    parameter_input: taskcat-input-apse1.json
-    regions:
-      - ap-southeast-1
-    template_file: master.yml
-  quickstart-compliance-irap-protected-usw2:
-    parameter_input: taskcat-input-usw2.json
-    regions:
-      - us-west-2
-    template_file: master.yml
+  # taskcat-apse1:
+  #   parameter_input: taskcat-input-apse1.json
+  #   regions:
+  #     - ap-southeast-1
+  #   template_file: master.yml
+  # taskcat-usw2:
+  #   parameter_input: taskcat-input-usw2.json
+  #   regions:
+  #     - us-west-2
+  #   template_file: master.yml

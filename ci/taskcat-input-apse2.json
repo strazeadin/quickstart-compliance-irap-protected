@@ -1,15 +1,15 @@
 [
     {
+      "ParameterKey": "AvailabilityZones",
+      "ParameterValue": "$[taskcat_genaz_3]"
+    },
+    {
       "ParameterKey": "DBUser",
       "ParameterValue": "dbuser"
     },
     {
       "ParameterKey": "DBPassword",
       "ParameterValue": "$[taskcat_genpass_8A]"
-    },
-    {
-      "ParameterKey": "TagPrefix",
-      "ParameterValue": "irapqs"
     },
     {
       "ParameterKey": "KeyPairName",

@@ -1,0 +1,1582 @@
+---
+AWSTemplateFormatVersion: 2010-09-09
+
+Description: IRAP PROTECTED Reference Architecture
+
+Metadata:
+  LICENSE: Apache License, Version 2.0 
+  'AWS::CloudFormation::Interface':
+    ParameterGroups:
+      - Label:
+          default: General configuration
+        Parameters:
+          - KMSAdmin
+          - KMSUser
+          - SnsEmail
+          - DBName
+          - DBUser
+          - DBPassword
+          - DBAllocatedStorage
+          - DBInstanceClass
+          - DBMultiAZ
+          - VPCID
+          - DatabaseSubnet1
+          - DatabaseSubnet2
+          - DatabaseSubnet3
+          - PrivateSubnet1
+          - PrivateSubnet2
+          - PrivateSubnet3
+          - LambdaSubnet1
+          - LambdaSubnet2
+          - LambdaSubnet3
+          - PublicSubnet1
+          - PublicSubnet2
+          - PublicSubnet3
+          - ASGInstanceType
+          - KeyPairName
+          - ImageId
+          - LoadBalancerDeregistrationDelay
+          - CloudwatchAgentServerManagedPolicy
+          - ALBScheme
+          - NLBScheme
+          - LambdaBucket
+          - LambdaZipsBucket
+          - LambdaZipFile
+          - ALBListenerPort
+          - MAXDNSLookupPerInvocation
+          - InvocationBeforeDeregistration
+          - CWMetricFlagIPCount
+          - IncludesPrefix
+          - AdminUrlPrefix
+          - AdminRemoteCidr
+          - RuleAction
+          - MaxExpectedURISize
+          - MaxExpectedQueryStringSize
+          - MaxExpectedBodySize
+          - MaxExpectedCookieSize
+          - CSRFExpectedHeader
+          - CSRFExpectedSize
+          - WAFTagPrefix
+    ParameterLabels:
+      KMSUser:
+        default: IAM user with ability to use KMS key
+      SnsEmail:
+        default: Email address to send Guard Duty alerts
+      DBAllocatedStorage:
+        default: The size of the database
+      DBInstanceClass:
+        default: The database instance type
+      DBName:
+        default: The database name
+      DBPassword:
+        default: The database password
+      DBUser:
+        default: The database admin account username
+      DBMultiAZ:
+        default: Set the RDS instance as Multi-AZ
+      VPCID:
+        default: VPCID
+      DatabaseSubnet1:
+        default: Database Subnet 1 ID
+      DatabaseSubnet2:
+        default: Database Subnet 2 ID
+      DatabaseSubnet3:
+        default: Database Subnet 3 ID
+      PrivateSubnet1:
+        default: Private Subnet 1 ID
+      PrivateSubnet2:
+        default: Private Subnet 2 ID
+      PrivateSubnet3:
+        default: Private Subnet 3 ID
+      LambdaSubnet1:
+        default: Lambda Subnet 1 ID
+      LambdaSubnet2:
+        default: Lambda Subnet 2 ID
+      LambdaSubnet3:
+        default: Lambda Subnet 3 ID
+      PublicSubnet1:
+        default: Public Subnet 1 ID
+      PublicSubnet2:
+        default: Public Subnet 2 ID
+      PublicSubnet3:
+        default: Public Subnet 3 ID
+      ASGInstanceType:
+        default: Instance type for ASG
+      KeyPairName:
+        default: EC2 keypair name
+      ImageId:
+        default: AMI ID for ASG
+      LoadBalancerDeregistrationDelay:
+        default: Time to wait before marking target as unused
+      CloudwatchAgentServerManagedPolicy:
+        default: ARN of the CloudWatch managed policy
+      ALBScheme:
+        default: Set ALB as internet-facing or internal-only
+      NLBScheme:
+        default: Set NLB as internet-facing or internal-only
+      LambdaBucket:
+        default: S3 bucket that the ALB/NLB update Lambda function writes to
+      LambdaZipsBucket:
+        default: S3 bucket that contains the ALB/NLB update Lambda function zipfile
+      LambdaZipFile:
+        default: The name of the ALB/NLB update Lambda function zipfile
+      ALBListenerPort:
+        default: ALB Listener port
+      MAXDNSLookupPerInvocation:
+        default: The max DNS lookups the ALB/NLB update function can perform per invocation
+      InvocationBeforeDeregistration:
+        default: Number of Lambda invocations needed before an IP is deregistered
+      CWMetricFlagIPCount:
+        default: Create a CloudWatch metric to track IP count of your internal ALB
+      IncludesPrefix:
+        default: URI path prefix for WAF that identifies server-side included components
+      AdminUrlPrefix:
+        default: URI path prefix that identifies your administrative sub-site for WAF
+      AdminRemoteCidr:
+        default: IP address allowed by WAF to access your administrative interface
+      RuleAction:
+        default: COUNT or BLOCK for WAF action
+      MaxExpectedURISize:
+        default: Maximum number of bytes allowed by the WAF in the URI component of the HTTP request
+      MaxExpectedQueryStringSize:
+        default: Maximum number of bytes allowed by the WAF in the query string component of the HTTP request
+      MaxExpectedBodySize:
+        default: Maximum number of bytes allowed by the WAF in the body of the request
+      MaxExpectedCookieSize:
+        default: Maximum number of bytes allowed by the WAF in the cookie header
+      CSRFExpectedHeader:
+        default: The custom HTTP request header, where the CSRF token value is expected to be encountered
+      CSRFExpectedSize:
+        default: The size in bytes of the CSRF token value
+      WAFTagPrefix:
+        default: Prefix to prepend to Tags for WAF
+
+Parameters:
+  KMSAdmin:
+    Description: User with ability to administer KMS key
+    Type: String
+  KMSUser:
+    Description: User with ability to use KMS key
+    Type: String
+  SnsEmail:
+    Description: Specify destination for GuardDuty email alerts
+    Type: String
+  DBName:
+    Default: MyDatabase
+    Description: The database name
+    Type: String
+    MinLength: '1'
+    MaxLength: '64'
+    AllowedPattern: '[a-zA-Z][a-zA-Z0-9]*'
+    ConstraintDescription: must begin with a letter and contain only alphanumeric
+      characters.
+  DBUser:
+    NoEcho: 'true'
+    Description: The database admin account username
+    Type: String
+    MinLength: '1'
+    MaxLength: '16'
+    AllowedPattern: '[a-zA-Z][a-zA-Z0-9]*'
+    ConstraintDescription: must begin with a letter and contain only alphanumeric
+      characters.
+  DBPassword:
+    NoEcho: 'true'
+    Description: The database admin account password
+    Type: String
+    MinLength: '1'
+    MaxLength: '41'
+    AllowedPattern: '[a-zA-Z0-9]+'
+    ConstraintDescription: must contain only alphanumeric characters.
+  DBAllocatedStorage:
+    Default: '5'
+    Description: The size of the database (GB)
+    Type: Number
+    MinValue: '5'
+    MaxValue: '1024'
+    ConstraintDescription: must be between 5 and 1024Gb.
+  DBInstanceClass:
+    Description: The database instance type
+    Type: String
+    Default: db.t2.small
+    AllowedValues: [db.t1.micro, db.m1.small, db.m1.medium, db.m1.large, db.m1.xlarge,
+      db.m2.xlarge, db.m2.2xlarge, db.m2.4xlarge, db.m3.medium, db.m3.large, db.m3.xlarge,
+      db.m3.2xlarge, db.m4.large, db.m4.xlarge, db.m4.2xlarge, db.m4.4xlarge, db.m4.10xlarge,
+      db.r3.large, db.r3.xlarge, db.r3.2xlarge, db.r3.4xlarge, db.r3.8xlarge, db.m2.xlarge,
+      db.m2.2xlarge, db.m2.4xlarge, db.cr1.8xlarge, db.t2.micro, db.t2.small, db.t2.medium,
+      db.t2.large]
+    ConstraintDescription: must select a valid database instance type.
+  DBMultiAZ:
+    Description: Whether the RDS instance should be Multi-AZ (set to 'true' for prod)
+    Type: String
+    Default: 'false'
+    AllowedValues: ['true', 'false']
+    ConstraintDescription: must be true or false.
+  VPCID:
+    Description: VPC ID
+    Type: String
+  DatabaseSubnet1:
+    Description: Database Subnet 1 ID
+    Type: String
+  DatabaseSubnet2:
+    Description: Database Subnet 2 ID
+    Type: String
+  DatabaseSubnet3:
+    Description: Database Subnet 3 ID
+    Type: String
+  PrivateSubnet1:
+    Description: Private Subnet 1 ID
+    Type: String
+  PrivateSubnet2:
+    Description: Private Subnet 2 ID
+    Type: String
+  PrivateSubnet3:
+    Description: Private Subnet 3 ID
+    Type: String
+  LambdaSubnet1:
+    Description: Lambda Subnet 1 ID
+    Type: String
+  LambdaSubnet2:
+    Description: Lambda Subnet 2 ID
+    Type: String
+  LambdaSubnet3:
+    Description: Lambda Subnet 3 ID
+    Type: String
+  PublicSubnet1:
+    Description: Public Subnet 1 ID
+    Type: String
+  PublicSubnet2:
+    Description: Public Subnet 2 ID
+    Type: String
+  PublicSubnet3:
+    Description: Public Subnet 3 ID
+    Type: String
+  ASGInstanceType:
+    Description: Instance type to be used for Auto Scaling Group instances
+    Type: String
+    Default: t2.micro
+    AllowedValues: [a1.2xlarge, a1.4xlarge, a1.large, a1.medium, a1.metal, a1.xlarge, c1.medium, c1.xlarge, c3.2xlarge, c3.4xlarge, c3.8xlarge, c3.large, c3.xlarge, c4.2xlarge, c4.4xlarge, c4.8xlarge, c4.large, c4.xlarge, c5.12xlarge, c5.18xlarge, c5.24xlarge, c5.2xlarge, c5.4xlarge, c5.9xlarge, c5.large, c5.metal, c5.xlarge, c5d.18xlarge, c5d.2xlarge, c5d.4xlarge, c5d.9xlarge, c5d.large, c5d.xlarge, c5n.18xlarge, c5n.2xlarge, c5n.4xlarge, c5n.9xlarge, c5n.large, c5n.xlarge, cc1.4xlarge, cc2.8xlarge, cg1.4xlarge, cr1.8xlarge, d2.2xlarge, d2.4xlarge, d2.8xlarge, d2.xlarge, f1.16xlarge, f1.2xlarge, f1.4xlarge, g2.2xlarge, g2.8xlarge, g3.16xlarge, g3.4xlarge, g3.8xlarge, g3s.xlarge, g4dn.12xlarge, g4dn.16xlarge, g4dn.2xlarge, g4dn.4xlarge, g4dn.8xlarge, g4dn.xlarge, h1.16xlarge, h1.2xlarge, h1.4xlarge, h1.8xlarge, hi1.4xlarge, hs1.8xlarge, i2.2xlarge, i2.4xlarge, i2.8xlarge, i2.xlarge, i3.16xlarge, i3.2xlarge, i3.4xlarge, i3.8xlarge, i3.large, i3.metal, i3.xlarge, i3en.12xlarge, i3en.24xlarge, i3en.2xlarge, i3en.3xlarge, i3en.6xlarge, i3en.large, i3en.metal, i3en.xlarge, m1.large, m1.medium, m1.small, m1.xlarge, m2.2xlarge, m2.4xlarge, m2.xlarge, m3.2xlarge, m3.large, m3.medium, m3.xlarge, m4.10xlarge, m4.16xlarge, m4.2xlarge, m4.4xlarge, m4.large, m4.xlarge, m5.12xlarge, m5.16xlarge, m5.24xlarge, m5.2xlarge, m5.4xlarge, m5.8xlarge, m5.large, m5.metal, m5.xlarge, m5a.12xlarge, m5a.16xlarge, m5a.24xlarge, m5a.2xlarge, m5a.4xlarge, m5a.8xlarge, m5a.large, m5a.xlarge, m5ad.12xlarge, m5ad.16xlarge, m5ad.24xlarge, m5ad.2xlarge, m5ad.4xlarge, m5ad.8xlarge, m5ad.large, m5ad.xlarge, m5d.12xlarge, m5d.16xlarge, m5d.24xlarge, m5d.2xlarge, m5d.4xlarge, m5d.8xlarge, m5d.large, m5d.metal, m5d.xlarge, m5dn.12xlarge, m5dn.16xlarge, m5dn.24xlarge, m5dn.2xlarge, m5dn.4xlarge, m5dn.8xlarge, m5dn.large, m5dn.xlarge, m5n.12xlarge, m5n.16xlarge, m5n.24xlarge, m5n.2xlarge, m5n.4xlarge, m5n.8xlarge, m5n.large, m5n.xlarge, p2.16xlarge, p2.8xlarge, p2.xlarge, p3.16xlarge, p3.2xlarge, p3.8xlarge, p3dn.24xlarge, r3.2xlarge, r3.4xlarge, r3.8xlarge, r3.large, r3.xlarge, r4.16xlarge, r4.2xlarge, r4.4xlarge, r4.8xlarge, r4.large, r4.xlarge, r5.12xlarge, r5.16xlarge, r5.24xlarge, r5.2xlarge, r5.4xlarge, r5.8xlarge, r5.large, r5.metal, r5.xlarge, r5a.12xlarge, r5a.16xlarge, r5a.24xlarge, r5a.2xlarge, r5a.4xlarge, r5a.8xlarge, r5a.large, r5a.xlarge, r5ad.12xlarge, r5ad.16xlarge, r5ad.24xlarge, r5ad.2xlarge, r5ad.4xlarge, r5ad.8xlarge, r5ad.large, r5ad.xlarge, r5d.12xlarge, r5d.16xlarge, r5d.24xlarge, r5d.2xlarge, r5d.4xlarge, r5d.8xlarge, r5d.large, r5d.metal, r5d.xlarge, r5dn.12xlarge, r5dn.16xlarge, r5dn.24xlarge, r5dn.2xlarge, r5dn.4xlarge, r5dn.8xlarge, r5dn.large, r5dn.xlarge, r5n.12xlarge, r5n.16xlarge, r5n.24xlarge, r5n.2xlarge, r5n.4xlarge, r5n.8xlarge, r5n.large, r5n.xlarge, t1.micro, t2.2xlarge, t2.large, t2.medium, t2.micro, t2.nano, t2.small, t2.xlarge, t3.2xlarge, t3.large, t3.medium, t3.micro, t3.nano, t3.small, t3.xlarge, t3a.2xlarge, t3a.large, t3a.medium, t3a.micro, t3a.nano, t3a.small, t3a.xlarge, u-12tb1.metal, u-6tb1.metal, u-9tb1.metal, x1.16xlarge, x1.32xlarge, x1e.16xlarge, x1e.2xlarge, x1e.32xlarge, x1e.4xlarge, x1e.8xlarge, x1e.xlarge, z1d.12xlarge, z1d.2xlarge, z1d.3xlarge, z1d.6xlarge, z1d.large, z1d.metal, z1d.xlarge]
+  KeyPairName:
+    Description: The EC2 keypair to be used for the Auto Scaling Group
+    Type: String
+  ImageId:
+    Description: The AMI image ID that will be used for EC2 instances
+    Type: 'AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>'
+    Default: '/aws/service/ami-amazon-linux-latest/amzn-ami-hvm-x86_64-gp2'
+  LoadBalancerDeregistrationDelay:
+    Description: 'The amount time (in seconds) to wait before changing the state of a deregistering target from draining to unused.'
+    Type: Number
+    Default: 60
+    ConstraintDescription: 'Must be in the range [0-3600]'
+    MinValue: 0
+    MaxValue: 3600
+  CloudwatchAgentServerManagedPolicy:
+    Description: The ARN of the managed policy that allows EC2 instances to write to CloudWatch.
+    Type: String
+    Default: 'arn:aws:iam::aws:policy/CloudWatchAgentServerPolicy'
+  ALBScheme:
+    Description: 'Indicates whether the load balancer in front of the ECS service is internet-facing or internal.'
+    Type: String
+    Default: internal
+    AllowedValues:
+    - internet-facing
+    - internal
+  NLBScheme:
+    Description: 'Indicates whether the load balancer in front of the ECS service is internet-facing or internal.'
+    Type: String
+    Default: internet-facing
+    AllowedValues:
+    - internet-facing
+    - internal
+  LambdaBucket:
+    Description: The bucket that your Lambda function writes to
+    Type: String
+  LambdaZipsBucket:
+    Description: The bucket where your Lambda function zipfile is stored
+    AllowedPattern: ^[0-9a-zA-Z]+([0-9a-zA-Z-]*[0-9a-zA-Z])*$
+    Type: String
+  LambdaZipFile:
+    Default: 'populate_NLB_TG_with_ALB.zip'
+    Description: The key of your Lambda function zipfile
+    Type: String
+  ALBListenerPort:
+    Description: Enter the traffic listener port of your internal Application Load
+      Balancer
+    Type: String
+    Default: '80'
+  MAXDNSLookupPerInvocation:
+    Description: The max DNS lookup this function can perform per invocation
+    Type: Number
+    Default: 50
+  InvocationBeforeDeregistration:
+    Description: How many invocations are needed before a IP is deregistered
+    Type: Number
+    Default: 3
+  CWMetricFlagIPCount:
+    Description: Whether you want the Lambda function to create a CloudWatch
+      metric to track IP count of your internal Application Load Balancer
+    Type: String
+    Default: 'True'
+    AllowedValues:
+      - 'True'
+      - 'False'
+  IncludesPrefix:
+    Type: String
+    Description: This is the URI path prefix (starting with '/') that identifies any files in your webroot that are server-side included components, and should not be invoked directly via URL. These can be headers, footers, 3rd party server side libraries or components. You can add additional prefixes later directly in the set.
+    Default: /includes
+  AdminUrlPrefix:
+    Type: String
+    Description: This is the URI path prefix (starting with '/') that identifies your administrative sub-site. You can add additional prefixes later directly in the set.
+    Default: /admin
+  AdminRemoteCidr:
+    Type: String
+    Description: This is the IP address allowed to access your administrative interface. Use CIDR notation. You can add additional ones later directly in the set.
+    Default: 127.0.0.1/32
+  RuleAction:
+    Type: String
+    Description: The type of action you want to iplement for the rules in this set. Valid options are COUNT or BLOCK.
+    AllowedValues:
+      - BLOCK
+      - COUNT
+    Default: BLOCK
+  MaxExpectedURISize:
+    Type: Number
+    Description: Maximum number of bytes allowed in the URI component of the HTTP request. Generally the maximum possible value is determined by the server operating system (maps to file system paths), the web server software, or other middleware components. Choose a value that accomodates the largest URI segment you use in practice in your web application.
+    Default: 512
+  MaxExpectedQueryStringSize:
+    Type: Number
+    Description: Maximum number of bytes allowed in the query string component of the HTTP request. Normally the  of query string parameters following the "?" in a URL is much larger than the URI , but still bounded by the  of the parameters your web application uses and their values.
+    Default: 1024
+  MaxExpectedBodySize:
+    Type: Number
+    Description: Maximum number of bytes allowed in the body of the request. If you do not plan to allow large uploads, set it to the largest payload value that makes sense for your web application. Accepting unnecessarily large values can cause performance issues, if large payloads are used as an attack vector against your web application.
+    Default: 4096
+  MaxExpectedCookieSize:
+    Type: Number
+    Description: Maximum number of bytes allowed in the cookie header. The maximum size should be less than 4096, the size is determined by the amount of information your web application stores in cookies. If you only pass a session token via cookies, set the size to no larger than the serialized size of the session token and cookie metadata.
+    Default: 4093
+  CSRFExpectedHeader:
+    Type: String
+    Description: The custom HTTP request header, where the CSRF token value is expected to be encountered
+    Default: x-csrf-token
+  CSRFExpectedSize:
+    Type: Number
+    Description: The size in bytes of the CSRF token value. For example if it's a canonically formatted UUIDv4 value the expected size would be 36 bytes/ASCII characters
+    Default: 36
+  WAFTagPrefix:
+    Description: The prefix to be applied to WAF rules
+    Type: String
+    Default: irapwaf
+Resources:
+
+  SNSTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      Subscription: []
+      DisplayName: "GuardDuty Findings"
+  SNSTopicPolicy:
+    Type: AWS::SNS::TopicPolicy
+    Properties:
+      PolicyDocument:
+        Statement:
+        - Action:
+          - sns:Publish
+          Effect: Allow
+          Principal:
+            Service: events.amazonaws.com
+          Resource:
+          - Ref: SNSTopic
+      Topics:
+      - Ref: SNSTopic
+  SNSGuardDutySubscription:
+    Type: AWS::SNS::Subscription
+    Properties:
+      Endpoint:
+        Ref: SnsEmail
+      Protocol: email
+      TopicArn: 
+        Ref: SNSTopic
+  EventsRule:
+    Type: AWS::Events::Rule
+    Properties:
+      EventPattern:
+        source:
+        - aws.guardduty
+      State: ENABLED
+      Targets:
+      - Arn:
+          Ref: SNSTopic
+        Id: sns
+  GuardDutyDetector:
+    Type: AWS::GuardDuty::Detector
+    Properties:
+      Enable: true
+  KMSkey: 
+    Type: AWS::KMS::Key
+    Properties: 
+      Description: "An example CMK"
+      KeyPolicy: 
+        Version: "2012-10-17"
+        Id: "key-default-1"
+        Statement:
+        -
+            Sid: "Enable IAM User Permissions"
+            Effect: "Allow"
+            Principal:
+              AWS: !Join ['', ['arn:aws:iam::', !Ref "AWS::AccountId", ":root"]]
+            Action: "kms:*"
+            Resource: "*"
+        - 
+          Sid: "Allow specified user(s) to administer the key"
+          Effect: "Allow"
+          Principal: 
+            AWS: !Join ['', ['arn:aws:iam::', !Ref "AWS::AccountId", ":user/", !Ref "KMSAdmin"]]
+          Action: 
+            - "kms:Create*"
+            - "kms:Describe*"
+            - "kms:Enable*"
+            - "kms:List*"
+            - "kms:Put*"
+            - "kms:Update*"
+            - "kms:Revoke*"
+            - "kms:Disable*"
+            - "kms:Get*"
+            - "kms:Delete*"
+            - "kms:ScheduleKeyDeletion"
+            - "kms:CancelKeyDeletion"
+          Resource: "*"
+        - 
+          Sid: "Allow specified user(s) to use the key"
+          Effect: "Allow"
+          Principal: 
+            AWS: !Join ['', ['arn:aws:iam::', !Ref "AWS::AccountId", ":user/", !Ref "KMSUser"]]
+          Action: 
+            - "kms:DescribeKey"
+            - "kms:Encrypt"
+            - "kms:Decrypt"
+            - "kms:ReEncrypt*"
+            - "kms:GenerateDataKey"
+            - "kms:GenerateDataKeyWithoutPlaintext"
+          Resource: "*"
+  RDSSubnetGroup:
+    Type: "AWS::RDS::DBSubnetGroup"
+    Properties:
+      DBSubnetGroupDescription: "RDS DB Subnet group"
+      SubnetIds:
+        - Ref: DatabaseSubnet1
+        - Ref: DatabaseSubnet2
+        - Ref: DatabaseSubnet3
+      Tags:
+        - Key: Name
+          Value:
+            Fn::Sub: ${AWS::StackName}-DBSubnetGroup
+  MasterDB:
+    Type: AWS::RDS::DBInstance
+    Properties:
+      DBName: !Ref 'DBName'
+      AllocatedStorage: !Ref 'DBAllocatedStorage'
+      DBInstanceClass: !Ref 'DBInstanceClass'
+      DBSubnetGroupName: !Ref RDSSubnetGroup
+      Engine: MySQL
+      MasterUsername: !Ref 'DBUser'
+      MasterUserPassword: !Ref 'DBPassword'
+      MultiAZ: !Ref 'DBMultiAZ'
+      Tags:
+      - Key: Name
+        Value:
+          Fn::Sub: ${AWS::StackName}-RDS
+      VPCSecurityGroups:
+        - !GetAtt DBSecurityGroup.GroupId
+      StorageEncrypted: true
+      KmsKeyId: !Ref KMSkey
+    DeletionPolicy: Delete
+  ReplicaDB:
+    Type: AWS::RDS::DBInstance
+    Properties:
+      SourceDBInstanceIdentifier: !Ref 'MasterDB'
+      DBInstanceClass: !Ref 'DBInstanceClass'
+      Tags:
+      - Key: Name
+        Value:
+          Fn::Sub: ${AWS::StackName}-RDSreplica
+      VPCSecurityGroups:
+        - !GetAtt DBSecurityGroup.GroupId
+  ELBSecurityGroup:
+    Type: "AWS::EC2::SecurityGroup"
+    Properties:
+      GroupDescription: HTTP from anywhere
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIp: 0.0.0.0/0
+      Tags:
+        - Key: Name
+          Value:
+            Fn::Sub: ${AWS::StackName}-ELB-SG
+      VpcId: !Ref VPCID
+  AppServerSG:
+    Type: "AWS::EC2::SecurityGroup"
+    Properties:
+      GroupDescription: HTTP from Load Balancers
+      SecurityGroupIngress:
+      - IpProtocol: tcp
+        FromPort: 80
+        ToPort: 80
+        SourceSecurityGroupId: !Ref 'ELBSecurityGroup'
+      Tags:
+        - Key: Name
+          Value:
+            Fn::Sub: ${AWS::StackName}-appserver-SG
+      VpcId: !Ref VPCID
+  DBSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: MySQL from Appserver
+      SecurityGroupIngress:
+      - IpProtocol: tcp
+        FromPort: 3306
+        ToPort: 3306
+        SourceSecurityGroupId: !Ref 'AppServerSG'
+      Tags:
+      - Key: Name
+        Value:
+          Fn::Sub: ${AWS::StackName}-RDS-SG
+      VpcId: !Ref VPCID
+  LambdaSecurityGroup:
+    Type: "AWS::EC2::SecurityGroup"
+    Properties:
+      GroupDescription: HTTP to anywhere
+      SecurityGroupIngress:
+        - IpProtocol: udp
+          FromPort: 53
+          ToPort: 53
+          CidrIp: 0.0.0.0/0
+      SecurityGroupEgress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 53
+          ToPort: 53
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: udp
+          FromPort: 53
+          ToPort: 53
+          CidrIp: 0.0.0.0/0
+      Tags:
+        - Key: Name
+          Value:
+            Fn::Sub: ${AWS::StackName}-lambda-SG
+      VpcId: !Ref VPCID
+  ASGIamRole:
+    Type: AWS::IAM::Role
+    Properties:
+      ManagedPolicyArns:
+        - !Ref CloudwatchAgentServerManagedPolicy         
+      AssumeRolePolicyDocument: 
+        Version: "2012-10-17"
+        Statement: 
+          - 
+            Effect: "Allow"
+            Principal: 
+              Service: 
+                - "ec2.amazonaws.com"
+            Action: 
+              - "sts:AssumeRole"
+      Path: "/"
+      Tags:
+      - Key: Name
+        Value:
+          Fn::Sub: ${AWS::StackName}-ASGRole
+  ASGIamInstanceProfile: 
+    Type: "AWS::IAM::InstanceProfile"
+    Properties: 
+      Path: "/"
+      Roles: 
+        - 
+          Ref: "ASGIamRole"
+  AutoScalingGroup:
+    Type: 'AWS::AutoScaling::AutoScalingGroup'
+    Properties:
+      VPCZoneIdentifier:
+        - !Ref PrivateSubnet1
+        - !Ref PrivateSubnet2
+        - !Ref PrivateSubnet3
+      HealthCheckType: ELB
+      HealthCheckGracePeriod: 300
+      LaunchConfigurationName: !Ref LaunchConfiguration
+      MaxSize: '2'
+      MinSize: '1'
+      Tags:
+      - Key: Name
+        Value:
+          Fn::Sub: ${AWS::StackName}-ASG
+        PropagateAtLaunch: true
+      TargetGroupARNs:
+        - !Ref ALBTargetGroup
+    UpdatePolicy:
+      AutoScalingRollingUpdate:
+        SuspendProcesses:
+        - HealthCheck
+        - ReplaceUnhealthy
+        - AZRebalance
+        - AlarmNotification
+        - ScheduledActions
+  LaunchConfiguration:
+    Type: 'AWS::AutoScaling::LaunchConfiguration'
+    Metadata:
+      AWS::CloudFormation::Init:
+        configSets:
+          default:
+            - 01_setupCfnHup
+            - 02_config-amazon-cloudwatch-agent
+            - 03_restart_amazon-cloudwatch-agent
+            - 04_install_httpd
+          UpdateEnvironment:
+            - 02_config-amazon-cloudwatch-agent
+            - 03_restart_amazon-cloudwatch-agent
+        # Definition of json configuration of AmazonCloudWatchAgent, you can change the configuration below.
+        02_config-amazon-cloudwatch-agent:
+          files:
+            '/opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json':
+              content: !Sub |
+                    {
+                      "agent": {
+                        "metrics_collection_interval": 10,
+                        "logfile": "/opt/aws/amazon-cloudwatch-agent/logs/amazon-cloudwatch-agent.log",
+                        "region": "ap-southeast-2"
+                      },
+                      "metrics": {
+                        "metrics_collected": {
+                          "cpu": {
+                            "resources": [
+                              "*"
+                            ],
+                            "measurement": [
+                              {"name": "cpu_usage_idle", "rename": "CPU_USAGE_IDLE", "unit": "Percent"},
+                              {"name": "cpu_usage_nice", "unit": "Percent"},
+                              "cpu_usage_guest"
+                            ],
+                            "totalcpu": false,
+                            "metrics_collection_interval": 10,
+                            "append_dimensions": {
+                              "customized_dimension_key_1": "customized_dimension_value_1",
+                              "customized_dimension_key_2": "customized_dimension_value_2"
+                            }
+                          },
+                          "disk": {
+                            "resources": [
+                              "/",
+                              "/tmp"
+                            ],
+                            "measurement": [
+                              {"name": "free", "rename": "DISK_FREE", "unit": "Gigabytes"},
+                              "total",
+                              "used"
+                            ],
+                            "ignore_file_system_types": [
+                              "sysfs", "devtmpfs"
+                            ],
+                            "metrics_collection_interval": 60,
+                            "append_dimensions": {
+                              "customized_dimension_key_3": "customized_dimension_value_3",
+                              "customized_dimension_key_4": "customized_dimension_value_4"
+                            }
+                          },
+                          "diskio": {
+                            "resources": [
+                              "*"
+                            ],
+                            "measurement": [
+                              "reads",
+                              "writes",
+                              "read_time",
+                              "write_time",
+                              "io_time"
+                            ],
+                            "metrics_collection_interval": 60
+                          },
+                          "swap": {
+                            "measurement": [
+                              "swap_used",
+                              "swap_free",
+                              "swap_used_percent"
+                            ]
+                          },
+                          "mem": {
+                            "measurement": [
+                              "mem_used",
+                              "mem_cached",
+                              "mem_total"
+                            ],
+                            "metrics_collection_interval": 1
+                          },
+                          "net": {
+                            "resources": [
+                              "eth0"
+                            ],
+                            "measurement": [
+                              "bytes_sent",
+                              "bytes_recv",
+                              "drop_in",
+                              "drop_out"
+                            ]
+                          },
+                          "netstat": {
+                            "measurement": [
+                              "tcp_established",
+                              "tcp_syn_sent",
+                              "tcp_close"
+                            ],
+                            "metrics_collection_interval": 60
+                          },
+                          "processes": {
+                            "measurement": [
+                              "running",
+                              "sleeping",
+                              "dead"
+                            ]
+                          }
+                        },
+                        "append_dimensions": {
+                          "ImageId": "${!aws:ImageId}",
+                          "InstanceId": "${!aws:InstanceId}",
+                          "InstanceType": "${!aws:InstanceType}",
+                          "AutoScalingGroupName": "${!aws:AutoScalingGroupName}"
+                        },
+                        "aggregation_dimensions" : [["ImageId"], ["InstanceId", "InstanceType"], ["d1"],[]],
+                        "force_flush_interval" : 30
+                      },
+                      "logs": {
+                        "logs_collected": {
+                          "files": {
+                            "collect_list": [
+                              {
+                                "file_path": "/var/log/httpd/access_log",
+                                "log_group_name": "protected_ec2_stack",
+                                "log_stream_name": "protected_ec2_apache_access",
+                                "timezone": "UTC"
+                              },
+                              {
+                                "file_path": "/var/log/httpd/error_log",
+                                "log_group_name": "protected_ec2_stack",
+                                "log_stream_name": "protected_ec2_apache_error",
+                                "timezone": "UTC"
+                              }
+                            ]
+                          }
+                        },
+                        "log_stream_name": "my_log_stream_name",
+                        "force_flush_interval" : 15
+                      }
+                    }
+        # Invoke amazon-cloudwatch-agent-ctl to restart the AmazonCloudWatchAgent.
+        03_restart_amazon-cloudwatch-agent:
+          commands:
+            01_stop_service:
+              command: /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -a stop
+            02_start_service:
+              command: /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -a fetch-config -m ec2 -c file:/opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json -s
+        # Install nginx
+        04_install_httpd:
+          commands:
+            01_install_httpd:
+              command: yum install -y httpd24 php56 php56-mysqlnd
+            02_set_website_content: 
+              command: echo '<html><h1>Welcome to your httpd website</h1></html>' > /var/www/html/index.html
+            03_set_website_php_content:
+              command: echo '<?php phpinfo(); ?>' > /var/www/html/info.php
+            04_start_service:
+              command: service httpd start && chkconfig httpd on                  
+                
+        # Cfn-hup setting, it is to monitor the change of metadata.
+        # When there is change in the contents of json file in the metadata section, cfn-hup will call cfn-init to restart the AmazonCloudWatchAgent.
+        01_setupCfnHup:
+          files:
+             '/etc/cfn/cfn-hup.conf':
+               content: !Sub |
+                 [main]
+                 stack=${AWS::StackId}
+                 region=${AWS::Region}
+                 interval=1
+               mode: '000400'
+               owner: root
+               group: root
+             '/etc/cfn/hooks.d/amazon-cloudwatch-agent-auto-reloader.conf':
+               content: !Sub |
+                 [cfn-auto-reloader-hook]
+                 triggers=post.update
+                 path=Resources.EC2Instance.Metadata.AWS::CloudFormation::Init.02_config-amazon-cloudwatch-agent
+                 action=/opt/aws/bin/cfn-init -v --stack ${AWS::StackId} --resource LaunchConfiguration --region ${AWS::Region} --configsets UpdateEnvironment
+                 runas=root
+               mode: '000400'
+               owner: root
+               group: root
+             "/lib/systemd/system/cfn-hup.service":
+                content: !Sub |
+                  [Unit]
+                  Description=cfn-hup daemon
+                  [Service]
+                  Type=simple
+                  ExecStart=/opt/aws/bin/cfn-hup
+                  Restart=always
+                  [Install]
+                  WantedBy=multi-user.target
+          commands:
+            01enable_cfn_hup:
+              command: !Sub |
+                service cfn-hup start
+            02start_cfn_hup:
+              command: !Sub |
+                chkconfig cfn-hup on
+    Properties:
+      AssociatePublicIpAddress: false
+      BlockDeviceMappings:
+        - DeviceName: '/dev/xvdf'
+          Ebs:
+            VolumeSize: 5
+            Encrypted: true
+      EbsOptimized: false
+      ImageId: !Ref ImageId
+      InstanceType: !Ref ASGInstanceType
+      IamInstanceProfile: !Ref ASGIamInstanceProfile
+      SecurityGroups:
+      - !Ref AppServerSG
+      KeyName: !Ref KeyPairName
+      UserData:
+        'Fn::Base64': !Sub |
+          #!/bin/bash -ex
+          sudo yum update -y
+          sudo mkfs -t ext4 /dev/xvdf
+          sudo mkdir -p /var/www/html/data
+          sudo mount /dev/xvdf /var/www/html/data
+          UUID=`sudo blkid | grep xvdf | awk '{print $2;}' | sed 's/UUID="//' | tr -d '"'`
+          echo "UUID=$UUID  /var/www/html  ext4  defaults,nofail  0  2" | sudo tee -a /etc/fstab
+          rpm -Uvh https://s3.amazonaws.com/amazoncloudwatch-agent/amazon_linux/amd64/latest/amazon-cloudwatch-agent.rpm
+          /opt/aws/bin/cfn-init -v --stack ${AWS::StackId} --resource LaunchConfiguration --region ${AWS::Region} --configsets default
+          /opt/aws/bin/cfn-signal -e $? --stack ${AWS::StackId} --resource LaunchConfiguration --region ${AWS::Region}
+  ALBTargetGroup:
+    Type: 'AWS::ElasticLoadBalancingV2::TargetGroup'
+    Properties:
+      HealthCheckIntervalSeconds: 15
+      HealthCheckPath: '/'
+      HealthCheckProtocol: HTTP
+      HealthCheckTimeoutSeconds: 10
+      HealthyThresholdCount: 2
+      UnhealthyThresholdCount: 2
+      Matcher:
+        HttpCode: '200-299'
+      Port: 80
+      Protocol: HTTP
+      VpcId: !Ref VPCID
+      TargetGroupAttributes:
+      - Key: deregistration_delay.timeout_seconds
+        Value: !Ref LoadBalancerDeregistrationDelay
+      Tags:
+      - Key: Name
+        Value:
+          Fn::Sub: ${AWS::StackName}-ALBTargetGroup
+  ApplicationLoadBalancer:
+    Type: 'AWS::ElasticLoadBalancingV2::LoadBalancer'
+    Properties:
+      Scheme: !Ref ALBScheme
+      SecurityGroups:
+      - !Ref ELBSecurityGroup
+      Subnets:
+        - !Ref PublicSubnet1
+        - !Ref PublicSubnet2
+        - !Ref PublicSubnet3
+      Tags:
+      - Key: Name
+        Value:
+          Fn::Sub: ${AWS::StackName}-ALB   
+  HttpListener:
+    Type: 'AWS::ElasticLoadBalancingV2::Listener'
+    Properties:
+      DefaultActions:
+      - TargetGroupArn: !Ref ALBTargetGroup
+        Type: forward
+      LoadBalancerArn: !Ref ApplicationLoadBalancer
+      Port: 80
+      Protocol: HTTP
+  NetworkLoadBalancer:
+    Type: 'AWS::ElasticLoadBalancingV2::LoadBalancer'
+    Properties:
+      Scheme: !Ref NLBScheme
+      Type: network
+      LoadBalancerAttributes:
+      - Key: load_balancing.cross_zone.enabled
+        Value: 'true'
+      Subnets:
+        - !Ref PublicSubnet1
+        - !Ref PublicSubnet2
+        - !Ref PublicSubnet3
+      Tags:
+      - Key: Name
+        Value:
+          Fn::Sub: ${AWS::StackName}-NLB
+  NLBTargetGroup:
+    Type: 'AWS::ElasticLoadBalancingV2::TargetGroup'
+    Properties:
+      Protocol: TCP
+      Port: 80
+      VpcId: !Ref VPCID
+      TargetType: 'ip'
+      TargetGroupAttributes:
+      - Key: deregistration_delay.timeout_seconds
+        Value: !Ref LoadBalancerDeregistrationDelay
+      Tags:
+      - Key: Name
+        Value:
+          Fn::Sub: ${AWS::StackName}-NLBTargetGroup
+  NLBListener:
+    Type: 'AWS::ElasticLoadBalancingV2::Listener'
+    Properties:
+      DefaultActions:
+      - TargetGroupArn: !Ref NLBTargetGroup
+        Type: forward
+      LoadBalancerArn: !Ref NetworkLoadBalancer
+      Port: 80
+      Protocol: TCP
+  UpdateALBFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      Description: Register Application Load Balancer to Network Load Balancer
+      Handler: populate_NLB_TG_with_ALB.lambda_handler
+      Runtime: python2.7
+      Role: !GetAtt UpdateALBIAMRole.Arn
+      Timeout: 300
+      Code:
+        S3Bucket: !Ref LambdaZipsBucket
+        S3Key: !Ref LambdaZipFile
+      KmsKeyArn: !GetAtt KMSkey.Arn
+      Environment:
+        Variables:
+          ALB_DNS_NAME: !GetAtt [ApplicationLoadBalancer, DNSName]
+          NLB_TG_ARN: !Ref NLBTargetGroup
+          S3_BUCKET: !Ref LambdaBucket
+          MAX_LOOKUP_PER_INVOCATION: !Ref 'MAXDNSLookupPerInvocation'
+          INVOCATIONS_BEFORE_DEREGISTRATION: !Ref 'InvocationBeforeDeregistration'
+          CW_METRIC_FLAG_IP_COUNT: !Ref 'CWMetricFlagIPCount'
+          ALB_LISTENER: !Ref 'ALBListenerPort'
+      VpcConfig:
+        SecurityGroupIds:
+          - !GetAtt LambdaSecurityGroup.GroupId
+        SubnetIds:
+          - !Ref LambdaSubnet1
+          - !Ref LambdaSubnet2
+          - !Ref LambdaSubnet3
+      Tags:
+        - Key: 'Name'
+          Value:
+            Fn::Sub: ${AWS::StackName}-UpdateLambda
+  ScheduledRule:
+    Type: AWS::Events::Rule
+    Properties:
+      Description: ScheduledRule
+      ScheduleExpression: rate(1 minute)
+      State: ENABLED
+      Targets:
+        - Arn: !GetAtt 'UpdateALBFunction.Arn'
+          Id: TargetFunctionV1
+  LambdaInvokePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !GetAtt UpdateALBFunction.Arn
+      Principal: events.amazonaws.com
+      Action: lambda:InvokeFunction
+      SourceArn: !GetAtt ScheduledRule.Arn
+  UpdateALBIAMRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      Path: /
+      Policies:
+        - PolicyName: Lambda-ALBasTarget
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Sid: LambdaLogging
+                Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource:
+                  - arn:aws:logs:*:*:*
+              - Sid: S3
+                Action:
+                  - s3:Get*
+                  - s3:Put*
+                  - s3:CreateBucket
+                  - s3:ListBucket
+                  - s3:ListAllMyBuckets
+                Effect: Allow
+                Resource:
+                  - !Join ['', ['arn:aws:s3:::', !Ref LambdaBucket]]
+                  - !Join ['', ['arn:aws:s3:::', !Ref LambdaBucket, '/*']]
+              - Sid: ELB
+                Action:
+                  - elasticloadbalancing:Describe*
+                  - elasticloadbalancing:RegisterTargets
+                  - elasticloadbalancing:DeregisterTargets
+                Effect: Allow
+                Resource: '*'
+              - Sid: CW
+                Action:
+                  - cloudwatch:putMetricData
+                Effect: Allow
+                Resource: '*'
+              - Sid: LambdaVPC
+                Action:
+                  - ec2:CreateNetworkInterface
+                  - ec2:DescribeNetworkInterfaces
+                  - ec2:DeleteNetworkInterface
+                Effect: Allow
+                Resource: '*'
+      Tags:
+      - Key: Name
+        Value:
+          Fn::Sub: ${AWS::StackName}-LambdaUpdateRole
+  LambdaS3Bucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Ref LambdaBucket
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+### WAF ACL ###
+  ## 1.
+  ## OWASP Top 10 A1
+  ## Mitigate SQL Injection Attacks
+  ## Matches attempted SQLi patterns in the URI, QUERY_STRING, BODY, COOKIES
+  wafSQLiSet:
+    Type: AWS::WAFRegional::SqlInjectionMatchSet
+    Properties:
+      Name: !Join ['-', [!Ref WAFTagPrefix, 'detect-sqli']]
+      SqlInjectionMatchTuples:
+        - FieldToMatch:
+            Type: URI
+          TextTransformation: URL_DECODE
+        - FieldToMatch:
+            Type: URI
+          TextTransformation: HTML_ENTITY_DECODE
+        - FieldToMatch:
+            Type: QUERY_STRING
+          TextTransformation: URL_DECODE
+        - FieldToMatch:
+            Type: QUERY_STRING
+          TextTransformation: HTML_ENTITY_DECODE
+        - FieldToMatch:
+            Type: BODY
+          TextTransformation: URL_DECODE
+        - FieldToMatch:
+            Type: BODY
+          TextTransformation: HTML_ENTITY_DECODE
+        - FieldToMatch:
+            Type: HEADER
+            Data: cookie
+          TextTransformation: URL_DECODE
+        - FieldToMatch:
+            Type: HEADER
+            Data: cookie
+          TextTransformation: HTML_ENTITY_DECODE
+  wafSQLiRule:
+    Type: AWS::WAFRegional::Rule
+    Properties:
+      MetricName: !Join ['', [!Ref WAFTagPrefix, 'mitigatesqli']]
+      Name: !Join ['-', [!Ref WAFTagPrefix, 'mitigate-sqli']]
+      Predicates:
+        - Type: SqlInjectionMatch
+          Negated: false
+          DataId: !Ref wafSQLiSet
+  ## 2.
+  ## OWASP Top 10 A2
+  ## Blacklist bad/hijacked JWT tokens or session IDs
+  ## Matches the specific values in the cookie or Authorization header
+  ## for JWT it is sufficient to check the signature
+  wafAuthTokenStringSet:
+    Type: AWS::WAFRegional::ByteMatchSet
+    Properties:
+      Name: !Join ['-', [!Ref WAFTagPrefix, 'match-auth-tokens']]
+      ByteMatchTuples:
+        - FieldToMatch:
+            Type: HEADER
+            Data: cookie
+          PositionalConstraint: CONTAINS
+          TargetString: example-session-id
+          TextTransformation: URL_DECODE
+        - FieldToMatch:
+            Type: HEADER
+            Data: authorization
+          PositionalConstraint: ENDS_WITH
+          TargetString: .TJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQ
+          TextTransformation: URL_DECODE
+  wafAuthTokenRule:
+    Type: AWS::WAFRegional::Rule
+    Properties:
+      MetricName: !Join ['', [!Ref WAFTagPrefix, 'badauthtokens']]
+      Name: !Join ['-', [!Ref WAFTagPrefix, 'detect-bad-auth-tokens']]
+      Predicates:
+        - Type: ByteMatch
+          Negated: false
+          DataId: !Ref wafAuthTokenStringSet
+  ## 3.
+  ## OWASP Top 10 A3
+  ## Mitigate Cross Site Scripting Attacks
+  ## Matches attempted XSS patterns in the URI, QUERY_STRING, BODY, COOKIES
+  wafXSSSet:
+    Type: AWS::WAFRegional::XssMatchSet
+    Properties:
+      Name: !Join ['-', [!Ref WAFTagPrefix, 'detect-xss']]
+      XssMatchTuples:
+        - FieldToMatch:
+            Type: URI
+          TextTransformation: URL_DECODE
+        - FieldToMatch:
+            Type: URI
+          TextTransformation: HTML_ENTITY_DECODE
+        - FieldToMatch:
+            Type: QUERY_STRING
+          TextTransformation: URL_DECODE
+        - FieldToMatch:
+            Type: QUERY_STRING
+          TextTransformation: HTML_ENTITY_DECODE
+        - FieldToMatch:
+            Type: BODY
+          TextTransformation: URL_DECODE
+        - FieldToMatch:
+            Type: BODY
+          TextTransformation: HTML_ENTITY_DECODE
+        - FieldToMatch:
+            Type: HEADER
+            Data: cookie
+          TextTransformation: URL_DECODE
+        - FieldToMatch:
+            Type: HEADER
+            Data: cookie
+          TextTransformation: HTML_ENTITY_DECODE
+  wafXSSRule:
+    Type: AWS::WAFRegional::Rule
+    Properties:
+      MetricName: !Join ['', [!Ref WAFTagPrefix, 'mitigatexss']]
+      Name: !Join ['-', [!Ref WAFTagPrefix, 'mitigate-xss']]
+      Predicates:
+        - Type: XssMatch
+          Negated: false
+          DataId: !Ref wafXSSSet
+  ## 4.
+  ## OWASP Top 10 A4
+  ## Path Traversal, LFI, RFI
+  ## Matches request patterns designed to traverse filesystem paths, and include
+  ## local or remote files
+  wafPathsStringSet:
+    Type: AWS::WAFRegional::ByteMatchSet
+    Properties:
+      Name: !Join ['-', [!Ref WAFTagPrefix, 'match-rfi-lfi-traversal']]
+      ByteMatchTuples:
+        - FieldToMatch:
+            Type: URI
+          PositionalConstraint: CONTAINS
+          TargetString: ../
+          TextTransformation: URL_DECODE
+        - FieldToMatch:
+            Type: URI
+          PositionalConstraint: CONTAINS
+          TargetString: ../
+          TextTransformation: HTML_ENTITY_DECODE
+        - FieldToMatch:
+            Type: QUERY_STRING
+          PositionalConstraint: CONTAINS
+          TargetString: ../
+          TextTransformation: URL_DECODE
+        - FieldToMatch:
+            Type: QUERY_STRING
+          PositionalConstraint: CONTAINS
+          TargetString: ../
+          TextTransformation: HTML_ENTITY_DECODE
+        - FieldToMatch:
+            Type: URI
+          PositionalConstraint: CONTAINS
+          TargetString: ://
+          TextTransformation: URL_DECODE
+        - FieldToMatch:
+            Type: URI
+          PositionalConstraint: CONTAINS
+          TargetString: ://
+          TextTransformation: HTML_ENTITY_DECODE
+        - FieldToMatch:
+            Type: QUERY_STRING
+          PositionalConstraint: CONTAINS
+          TargetString: ://
+          TextTransformation: URL_DECODE
+        - FieldToMatch:
+            Type: QUERY_STRING
+          PositionalConstraint: CONTAINS
+          TargetString: ://
+          TextTransformation: HTML_ENTITY_DECODE
+  wafPathsRule:
+    Type: AWS::WAFRegional::Rule
+    Properties:
+      MetricName: !Join ['', [!Ref WAFTagPrefix, 'detectrfilfi']]
+      Name: !Join ['-', [!Ref WAFTagPrefix, 'detect-rfi-lfi-traversal']]
+      Predicates:
+        - Type: ByteMatch
+          Negated: false
+          DataId: !Ref wafPathsStringSet
+  ## 5.
+  ## OWASP Top 10 A4
+  ## Privileged Module Access Restrictions
+  ## Restrict access to the admin interface to known source IPs only
+  ## Matches the URI prefix, when the remote IP isn't in the whitelist
+  wafAdminUrlStringSet:
+    Type: AWS::WAFRegional::ByteMatchSet
+    Properties:
+      Name: !Join ['-', [!Ref WAFTagPrefix, 'match-admin-url']]
+      ByteMatchTuples:
+        - FieldToMatch:
+            Type: URI
+          PositionalConstraint: STARTS_WITH
+          TargetString: !Ref AdminUrlPrefix
+          TextTransformation: URL_DECODE
+  wafAdminRemoteAddrIpSet:
+    Type: AWS::WAFRegional::IPSet
+    Properties:
+      Name: !Join ['-', [!Ref WAFTagPrefix, 'match-admin-remote-ip']]
+      IPSetDescriptors:
+        - Type: IPV4
+          Value: !Ref AdminRemoteCidr
+  wafAdminAccessRule:
+    Type: AWS::WAFRegional::Rule
+    Properties:
+      MetricName: !Join ['', [!Ref WAFTagPrefix, 'detectadminaccess']]
+      Name: !Join ['-', [!Ref WAFTagPrefix, 'detect-admin-access']]
+      Predicates:
+        - Type: ByteMatch
+          Negated: false
+          DataId: !Ref wafAdminUrlStringSet
+        - Type: IPMatch
+          Negated: true
+          DataId: !Ref wafAdminRemoteAddrIpSet
+  ## 6.
+  ## OWASP Top 10 A5
+  ## PHP Specific Security Misconfigurations
+  ## Matches request patterns designed to exploit insecure PHP/CGI configuration
+  wafPHPInsecureQSStringSet:
+    Type: AWS::WAFRegional::ByteMatchSet
+    Properties:
+      Name: !Join ['-', [!Ref WAFTagPrefix, 'match-php-insecure-var-refs']]
+      ByteMatchTuples:
+        - FieldToMatch:
+            Type: QUERY_STRING
+          PositionalConstraint: CONTAINS
+          TargetString: _SERVER[
+          TextTransformation: URL_DECODE
+        - FieldToMatch:
+            Type: QUERY_STRING
+          PositionalConstraint: CONTAINS
+          TargetString: _ENV[
+          TextTransformation: URL_DECODE
+        - FieldToMatch:
+            Type: QUERY_STRING
+          PositionalConstraint: CONTAINS
+          TargetString: auto_prepend_file=
+          TextTransformation: URL_DECODE
+        - FieldToMatch:
+            Type: QUERY_STRING
+          PositionalConstraint: CONTAINS
+          TargetString: auto_append_file=
+          TextTransformation: URL_DECODE
+        - FieldToMatch:
+            Type: QUERY_STRING
+          PositionalConstraint: CONTAINS
+          TargetString: allow_url_include=
+          TextTransformation: URL_DECODE
+        - FieldToMatch:
+            Type: QUERY_STRING
+          PositionalConstraint: CONTAINS
+          TargetString: disable_functions=
+          TextTransformation: URL_DECODE
+        - FieldToMatch:
+            Type: QUERY_STRING
+          PositionalConstraint: CONTAINS
+          TargetString: open_basedir=
+          TextTransformation: URL_DECODE
+        - FieldToMatch:
+            Type: QUERY_STRING
+          PositionalConstraint: CONTAINS
+          TargetString: safe_mode=
+          TextTransformation: URL_DECODE
+  wafPHPInsecureURIStringSet:
+    Type: AWS::WAFRegional::ByteMatchSet
+    Properties:
+      Name: !Join ['-', [!Ref WAFTagPrefix, 'match-php-insecure-uri']]
+      ByteMatchTuples:
+        - FieldToMatch:
+            Type: URI
+          PositionalConstraint: ENDS_WITH
+          TargetString: php
+          TextTransformation: URL_DECODE
+        - FieldToMatch:
+            Type: URI
+          PositionalConstraint: ENDS_WITH
+          TargetString: /
+          TextTransformation: URL_DECODE
+  wafPHPInsecureRule:
+    Type: AWS::WAFRegional::Rule
+    Properties:
+      MetricName: !Join ['', [!Ref WAFTagPrefix, 'detectphpinsecure']]
+      Name: !Join ['-', [!Ref WAFTagPrefix, 'detect-php-insecure']]
+      Predicates:
+        - Type: ByteMatch
+          Negated: false
+          DataId: !Ref wafPHPInsecureQSStringSet
+        - Type: ByteMatch
+          Negated: false
+          DataId: !Ref wafPHPInsecureURIStringSet
+  ## 7.
+  ## OWASP Top 10 A7
+  ## Mitigate abnormal requests via size restrictions
+  ## Enforce consistent request hygene, limit size of key elements  
+  wafSizeRestrictionSet:
+    Type: AWS::WAFRegional::SizeConstraintSet
+    Properties:
+      Name: !Join ['-', [!Ref WAFTagPrefix, 'size-restrictions']]
+      SizeConstraints:
+        - FieldToMatch:
+            Type: URI
+          TextTransformation: NONE
+          ComparisonOperator: GT
+          Size: !Ref MaxExpectedURISize
+        - FieldToMatch:
+            Type: QUERY_STRING
+          TextTransformation: NONE
+          ComparisonOperator: GT
+          Size: !Ref MaxExpectedQueryStringSize
+        - FieldToMatch:
+            Type: BODY
+          TextTransformation: NONE
+          ComparisonOperator: GT
+          Size: !Ref MaxExpectedBodySize
+        - FieldToMatch:
+            Type: HEADER
+            Data: cookie
+          TextTransformation: NONE
+          ComparisonOperator: GT
+          Size: !Ref MaxExpectedCookieSize
+  wafSizeRestrictionRule:
+    Type: AWS::WAFRegional::Rule
+    Properties:
+      MetricName: !Join ['', [!Ref WAFTagPrefix, 'restrictsizes']]
+      Name: !Join ['-', [!Ref WAFTagPrefix, 'restrict-sizes']]
+      Predicates:
+        - Type: SizeConstraint
+          Negated: false
+          DataId: !Ref wafSizeRestrictionSet
+  ## 8.
+  ## OWASP Top 10 A8
+  ## CSRF token enforcement example
+  ## Enforce the presence of CSRF token in request header
+  wafCSRFMethodStringSet:
+    Type: AWS::WAFRegional::ByteMatchSet
+    Properties:
+      Name: !Join ['-', [!Ref WAFTagPrefix, 'match-csrf-method']]
+      ByteMatchTuples:
+        - FieldToMatch:
+            Type: METHOD
+          PositionalConstraint: EXACTLY
+          TargetString: post
+          TextTransformation: LOWERCASE
+  wafCSRFTokenSizeConstraint:
+    Type: AWS::WAFRegional::SizeConstraintSet
+    Properties:
+      Name: !Join ['-', [!Ref WAFTagPrefix, 'match-csrf-token']]
+      SizeConstraints:
+        - FieldToMatch:
+            Type: HEADER
+            Data: !Ref CSRFExpectedHeader
+          TextTransformation: NONE
+          ComparisonOperator: EQ
+          Size: !Ref CSRFExpectedSize
+  wafCSRFRule:
+    Type: AWS::WAFRegional::Rule
+    Properties:
+      MetricName: !Join ['', [!Ref WAFTagPrefix, 'enforcecsrf']]
+      Name: !Join ['-', [!Ref WAFTagPrefix, 'enforce-csrf']]
+      Predicates:
+        - Type: ByteMatch
+          Negated: false
+          DataId: !Ref wafCSRFMethodStringSet
+        - Type: SizeConstraint
+          Negated: true
+          DataId: !Ref wafCSRFTokenSizeConstraint
+  ## 9.
+  ## OWASP Top 10 A9
+  ## Server-side includes & libraries in webroot
+  ## Matches request patterns for webroot objects that shouldn't be directly accessible
+  wafServerSideIncludeStringSet:
+    Type: AWS::WAFRegional::ByteMatchSet
+    Properties:
+      Name: !Join ['-', [!Ref WAFTagPrefix, 'match-ssi']]
+      ByteMatchTuples:
+        - FieldToMatch:
+            Type: URI
+          PositionalConstraint: STARTS_WITH
+          TargetString: !Ref IncludesPrefix
+          TextTransformation: URL_DECODE
+        - FieldToMatch:
+            Type: URI
+          PositionalConstraint: ENDS_WITH
+          TargetString: .cfg
+          TextTransformation: LOWERCASE
+        - FieldToMatch:
+            Type: URI
+          PositionalConstraint: ENDS_WITH
+          TargetString: .conf
+          TextTransformation: LOWERCASE
+        - FieldToMatch:
+            Type: URI
+          PositionalConstraint: ENDS_WITH
+          TargetString: .config
+          TextTransformation: LOWERCASE
+        - FieldToMatch:
+            Type: URI
+          PositionalConstraint: ENDS_WITH
+          TargetString: .ini
+          TextTransformation: LOWERCASE
+        - FieldToMatch:
+            Type: URI
+          PositionalConstraint: ENDS_WITH
+          TargetString: .log
+          TextTransformation: LOWERCASE
+        - FieldToMatch:
+            Type: URI
+          PositionalConstraint: ENDS_WITH
+          TargetString: .bak
+          TextTransformation: LOWERCASE
+        - FieldToMatch:
+            Type: URI
+          PositionalConstraint: ENDS_WITH
+          TargetString: .backup
+          TextTransformation: LOWERCASE
+  wafServerSideIncludeRule:
+    Type: AWS::WAFRegional::Rule
+    Properties:
+      MetricName: !Join ['', [!Ref WAFTagPrefix, 'detectssi']]
+      Name: !Join ['-', [!Ref WAFTagPrefix, 'detect-ssi']]
+      Predicates:
+        - Type: ByteMatch
+          Negated: false
+          DataId: !Ref wafServerSideIncludeStringSet
+  ## 10.
+  ## Generic
+  ## IP Blacklist
+  ## Matches IP addresses that should not be allowed to access content
+  wafBlacklistIpSet:
+    Type: AWS::WAFRegional::IPSet
+    Properties:
+      Name: !Join ['-', [!Ref WAFTagPrefix, 'match-blacklisted-ips']]
+      IPSetDescriptors:
+        # - Type: IPV4              # Required for NLB communication with internal ALB
+        #   Value: 10.0.0.0/8
+        - Type: IPV4
+          Value: 192.168.0.0/16
+        - Type: IPV4
+          Value: 169.254.0.0/16
+        - Type: IPV4
+          Value: 172.16.0.0/16
+        - Type: IPV4
+          Value: 127.0.0.1/32
+  wafBlacklistIpRule:
+    Type: AWS::WAFRegional::Rule
+    Properties:
+      MetricName: !Join ['', [!Ref WAFTagPrefix, 'blacklistedips']]
+      Name: !Join ['-', [!Ref WAFTagPrefix, 'detect-blacklisted-ips']]
+      Predicates:
+        - Type: IPMatch
+          Negated: false
+          DataId: !Ref wafBlacklistIpSet
+  # # --
+  # # WebACL containing the above rules evaluated in-order
+  wafOwaspACL:
+    Type: AWS::WAFRegional::WebACL
+    Properties:
+      MetricName: !Join ['', [!Ref WAFTagPrefix, 'owaspacl']]
+      Name: !Join ['-', [!Ref WAFTagPrefix, 'owasp-acl']]
+      DefaultAction:
+        Type: ALLOW
+      Rules:
+        - Action:
+            Type: !Ref RuleAction
+          Priority: 10
+          RuleId: !Ref wafSizeRestrictionRule
+        - Action:
+            Type: !Ref RuleAction
+          Priority: 20
+          RuleId: !Ref wafBlacklistIpRule
+        - Action:
+            Type: !Ref RuleAction
+          Priority: 30
+          RuleId: !Ref wafAuthTokenRule
+        - Action:
+            Type: !Ref RuleAction
+          Priority: 40
+          RuleId: !Ref wafSQLiRule
+        - Action:
+            Type: !Ref RuleAction
+          Priority: 50
+          RuleId: !Ref wafXSSRule
+        - Action:
+            Type: !Ref RuleAction
+          Priority: 60
+          RuleId: !Ref wafPathsRule
+        - Action:
+            Type: !Ref RuleAction
+          Priority: 70
+          RuleId: !Ref wafPHPInsecureRule
+        # - Action:                         # Disable wafCSRFRule to enable POSTs to our example web app
+        #     Type: !Ref RuleAction
+        #   Priority: 80
+        #   RuleId: !Ref wafCSRFRule
+        - Action:
+            Type: !Ref RuleAction
+          Priority: 90
+          RuleId: !Ref wafServerSideIncludeRule
+        - Action:
+            Type: !Ref RuleAction
+          Priority: 100
+          RuleId: !Ref wafAdminAccessRule
+  webACLAssociation:
+    Type: "AWS::WAFRegional::WebACLAssociation"
+    Properties:
+      ResourceArn: !Ref ApplicationLoadBalancer
+      WebACLId: !Ref wafOwaspACL
+
+Outputs:
+  URL:
+    Description: URL of the website
+    Value: !Join ['', ['http://', !GetAtt [NetworkLoadBalancer, DNSName]]]
+  MasterJDBCConnectionString:
+    Description: JDBC connection string for the master database
+    Value: !Join ['', ['jdbc:mysql://', !GetAtt [MasterDB, Endpoint.Address], ':',
+        !GetAtt [MasterDB, Endpoint.Port], /, !Ref 'DBName']]
+  ReplicaJDBCConnectionString:
+    Description: JDBC connection string for the replica database
+    Value: !Join ['', ['jdbc:mysql://', !GetAtt [ReplicaDB, Endpoint.Address], ':',
+        !GetAtt [ReplicaDB, Endpoint.Port], /, !Ref 'DBName']]

@@ -1863,7 +1863,7 @@ Resources:
         Value: NACL Lambda subnet
       - Key: Network
         Value: NACL Lambda
-  LambdaSubnetNetworkAclEntryHTTPSInbound:
+  LambdaSubnetNetworkAclEntryHTTPInbound:
     Condition: PrivateSubnetsCondition
     Type: AWS::EC2::NetworkAclEntry
     Properties:
@@ -1875,8 +1875,36 @@ Resources:
         Egress: false
         CidrBlock: 0.0.0.0/0
         PortRange:
+          From: 80
+          To: 80
+  LambdaSubnetNetworkAclEntryHTTPSInbound:
+    Condition: PrivateSubnetsCondition
+    Type: AWS::EC2::NetworkAclEntry
+    Properties:
+        NetworkAclId:
+          Ref: LambdaSubnetNetworkAcl
+        RuleNumber: 105
+        Protocol: 6
+        RuleAction: allow
+        Egress: false
+        CidrBlock: 0.0.0.0/0
+        PortRange:
           From: 443
           To: 443
+  LambdaSubnetNetworkAclEntryEphemeralInbound:
+    Condition: PrivateSubnetsCondition
+    Type: AWS::EC2::NetworkAclEntry
+    Properties:
+        NetworkAclId:
+          Ref: LambdaSubnetNetworkAcl
+        RuleNumber: 110
+        Protocol: 6
+        RuleAction: allow
+        Egress: false
+        CidrBlock: 0.0.0.0/0
+        PortRange:
+          From: 1024
+          To: 65535
   LambdaSubnetNetworkAclEntryEphemeralOutbound:
     Condition: PrivateSubnetsCondition
     Type: AWS::EC2::NetworkAclEntry
@@ -1889,7 +1917,7 @@ Resources:
         Egress: true
         CidrBlock: 0.0.0.0/0
         PortRange:
-          From: 1024
+          From: 0
           To: 65535
   LambdaSubnet1ANetworkAclAssociation:
     Condition: PrivateSubnetsCondition
@@ -2276,7 +2304,7 @@ Resources:
     Condition: PrivateSubnetsCondition
     Type: AWS::EC2::NetworkAclEntry
     Properties:
-      CidrBlock: 10.0.0.0/16
+      CidrBlock: 0.0.0.0/0
       Egress: false
       NetworkAclId:
         Ref: PrivateSubnetNetworkAcl
@@ -2703,7 +2731,7 @@ Resources:
       Protocol: 6
       PortRange:
         From: 443
-        To: 4443
+        To: 443
       RuleAction: allow
       RuleNumber: 105
   PublicSubnetNetworkAclEntryEphemeralInbound:
@@ -2905,48 +2933,6 @@ Resources:
         - AllocationId
       SubnetId:
         Ref: PublicSubnet4
-  S3VPCEndpoint:
-    Condition: PrivateSubnetsCondition
-    Type: AWS::EC2::VPCEndpoint
-    Properties:
-      PolicyDocument:
-        Version: '2012-10-17'
-        Statement:
-        - Action: "*"
-          Effect: Allow
-          Resource: "*"
-          Principal: "*"
-      RouteTableIds:
-      - Ref: PrivateSubnet1ARouteTable
-      - Ref: PrivateSubnet2ARouteTable
-      - Fn::If:
-        - PrivateSubnets&3AZCondition
-        - Ref: PrivateSubnet3ARouteTable
-        - Ref: AWS::NoValue
-      - Fn::If:
-        - PrivateSubnets&4AZCondition
-        - Ref: PrivateSubnet4ARouteTable
-        - Ref: AWS::NoValue
-      - Fn::If:
-        - AdditionalPrivateSubnetsCondition
-        - Ref: PrivateSubnet1BRouteTable
-        - Ref: AWS::NoValue
-      - Fn::If:
-        - AdditionalPrivateSubnetsCondition
-        - Ref: PrivateSubnet2BRouteTable
-        - Ref: AWS::NoValue
-      - Fn::If:
-        - AdditionalPrivateSubnets&3AZCondition
-        - Ref: PrivateSubnet3BRouteTable
-        - Ref: AWS::NoValue
-      - Fn::If:
-        - AdditionalPrivateSubnets&4AZCondition
-        - Ref: PrivateSubnet4BRouteTable
-        - Ref: AWS::NoValue
-      ServiceName:
-        Fn::Sub: com.amazonaws.${AWS::Region}.s3
-      VpcId:
-        Ref: VPC
 Outputs:
   NAT1EIP:
     Condition: PrivateSubnetsCondition
@@ -3228,92 +3214,6 @@ Outputs:
     Export:
       Name:
         Fn::Sub: "${AWS::StackName}-PublicSubnet4ID"
-  S3VPCEndpoint:
-    Condition: PrivateSubnetsCondition
-    Description: S3 VPC Endpoint
-    Value:
-      Ref: S3VPCEndpoint
-    Export:
-      Name:
-        Fn::Sub: "${AWS::StackName}-S3VPCEndpoint"
-  # PrivateSubnet1ARouteTable:
-  #   Condition: PrivateSubnetsCondition
-  #   Value:
-  #     Ref: PrivateSubnet1ARouteTable
-  #   Description: Private subnet 1A route table
-  #   Export:
-  #     Name:
-  #       Fn::Sub: "${AWS::StackName}-PrivateSubnet1ARouteTable"
-  # PrivateSubnet1BRouteTable:
-  #   Condition: AdditionalPrivateSubnetsCondition
-  #   Value:
-  #     Ref: PrivateSubnet1BRouteTable
-  #   Description: Private subnet 1B route table
-  #   Export:
-  #     Name:
-  #       Fn::Sub: "${AWS::StackName}-PrivateSubnet1BRouteTable"
-  # PrivateSubnet2ARouteTable:
-  #   Condition: PrivateSubnetsCondition
-  #   Value:
-  #     Ref: PrivateSubnet2ARouteTable
-  #   Description: Private subnet 2A route table
-  #   Export:
-  #     Name:
-  #       Fn::Sub: "${AWS::StackName}-PrivateSubnet2ARouteTable"
-  # PrivateSubnet2BRouteTable:
-  #   Condition: AdditionalPrivateSubnetsCondition
-  #   Value:
-  #     Ref: PrivateSubnet2BRouteTable
-  #   Description: Private subnet 2B route table
-  #   Export:
-  #     Name:
-  #       Fn::Sub: "${AWS::StackName}-PrivateSubnet2BRouteTable"
-  # PrivateSubnet3ARouteTable:
-  #   Condition: PrivateSubnets&3AZCondition
-  #   Value:
-  #     Ref: PrivateSubnet3ARouteTable
-  #   Description: Private subnet 3A route table
-  #   Export:
-  #     Name:
-  #       Fn::Sub: "${AWS::StackName}-PrivateSubnet3ARouteTable"
-  # PrivateSubnet3BRouteTable:
-  #   Condition: AdditionalPrivateSubnets&3AZCondition
-  #   Value:
-  #     Ref: PrivateSubnet3BRouteTable
-  #   Description: Private subnet 3B route table
-  #   Export:
-  #     Name:
-  #       Fn::Sub: "${AWS::StackName}-PrivateSubnet3BRouteTable"
-  # PrivateSubnet4ARouteTable:
-  #   Condition: PrivateSubnets&4AZCondition
-  #   Value:
-  #     Ref: PrivateSubnet4ARouteTable
-  #   Description: Private subnet 4A route table
-  #   Export:
-  #     Name:
-  #       Fn::Sub: "${AWS::StackName}-PrivateSubnet4ARouteTable"
-  # PrivateSubnet4BRouteTable:
-  #   Condition: AdditionalPrivateSubnets&4AZCondition
-  #   Value:
-  #     Ref: PrivateSubnet4BRouteTable
-  #   Description: Private subnet 4B route table
-  #   Export:
-  #     Name:
-  #       Fn::Sub: "${AWS::StackName}-PrivateSubnet4BRouteTable"
-  # PublicSubnetRouteTable:
-  #   Value:
-  #     Ref: PublicSubnetRouteTable
-  #   Description: Public subnet route table
-  #   Export:
-  #     Name:
-  #       Fn::Sub: "${AWS::StackName}-PublicSubnetRouteTable"
-  # VPCCIDR:
-  #   Value:
-  #     Ref: VPCCIDR
-  #   Description: VPC CIDR
-  #   Export:
-  #     Name:
-  #       Fn::Sub: "${AWS::StackName}-VPCCIDR"
   VPCID:
     Value:
       Ref: VPC

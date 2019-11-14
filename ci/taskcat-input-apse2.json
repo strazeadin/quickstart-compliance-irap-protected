@@ -1,7 +1,7 @@
 [
     {
       "ParameterKey": "AvailabilityZones",
-      "ParameterValue": "ap-southeast-2a,ap-southeast-2b,ap-southeast-2c"
+      "ParameterValue": "$[taskcat_genaz_3]"
     },
     {
       "ParameterKey": "DBUser",
@@ -12,7 +12,7 @@
       "ParameterValue": "$[taskcat_genpass_8A]"
     },
     {
-      "ParameterKey": "ASGKeyPairName",
+      "ParameterKey": "KeyPairName",
       "ParameterValue": "override"
     },
     {

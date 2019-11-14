@@ -68,7 +68,7 @@ Parameters:
     MaxLength: '41'
     AllowedPattern: '[a-zA-Z0-9]+'
     ConstraintDescription: must contain only alphanumeric characters.
-  ASGKeyPairName:
+  KeyPairName:
     Description: The EC2 keypair to be used for the Auto Scaling Group
     Type: String
   LambdaBucket:
@@ -88,7 +88,7 @@ Resources:
     Type: 'AWS::CloudFormation::Stack'
     Properties:
       TemplateURL: !Sub
-        - https://${QSS3BucketName}.${QSS3Region}.amazonaws.com/${QSS3KeyPrefix}vpc.yml
+        - https://${QSS3BucketName}.${QSS3Region}.amazonaws.com/${QSS3KeyPrefix}templates/vpc.yml
         - QSS3Region:
             Fn::If:
             - GovCloudCondition
@@ -102,7 +102,7 @@ Resources:
     Type: 'AWS::CloudFormation::Stack'
     Properties:
       TemplateURL: !Sub
-        - https://${QSS3BucketName}.${QSS3Region}.amazonaws.com/${QSS3KeyPrefix}irap-protected.yml
+        - https://${QSS3BucketName}.${QSS3Region}.amazonaws.com/${QSS3KeyPrefix}templates/irap-protected.yml
         - QSS3Region:
             Fn::If:
             - GovCloudCondition
@@ -114,7 +114,7 @@ Resources:
         SnsEmail: !Ref SnsEmail
         DBUser: !Ref DBUser
         DBPassword: !Ref DBPassword
-        ASGKeyPairName: !Ref ASGKeyPairName
+        KeyPairName: !Ref KeyPairName
         VPCID: !GetAtt VPCStack.Outputs.VPCID
         LambdaZipsBucket: !Ref LambdaZipsBucket
         LambdaBucket: !Ref LambdaBucket
@@ -130,3 +130,8 @@ Resources:
         LambdaSubnet1: !GetAtt VPCStack.Outputs.LambdaSubnet1AID
         LambdaSubnet2: !GetAtt VPCStack.Outputs.LambdaSubnet2AID
         LambdaSubnet3: !GetAtt VPCStack.Outputs.LambdaSubnet3AID
+
+Outputs:
+  URL:
+    Description: URL of the website
+    Value: !GetAtt IRAPPROTECTEDStack.Outputs.URL

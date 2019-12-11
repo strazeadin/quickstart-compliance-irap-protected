@@ -1,35 +1,37 @@
-Description: "AWS VPC + Aurora Postgres, Do Not Remove Apache License Version 2.0 (qs-1pj6s43hc) July,23,2019"
+---
+Description: "IRAP PROTECTED Reference Architecture (qs-1q8ko8tkk)"
 Metadata:
   LICENSE: Apache License Version 2.0
   AWS::CloudFormation::Interface:
     ParameterGroups:
-    - Label:
-        default: Network configuration
-      Parameters:
-      - AvailabilityZones
-    - Label:
-        default: Quick Start configuration
-      Parameters:
-      - QSS3BucketName
-      - QSS3KeyPrefix
-    - Label:
-        default: IRAP PROTECTED configuration
-      Parameters:
-      - KMSAdmin
-      - KMSUser
-      - SnsEmail
-      - DBUser
-      - DBPassword
+      - Label:
+          default: Network configuration
+        Parameters:
+          - AvailabilityZones
+      - Label:
+          default: Quick Start configuration
+        Parameters:
+          - QSS3BucketName
+          - QSS3KeyPrefix
+      - Label:
+          default: IRAP PROTECTED configuration
+        Parameters:
+          - KMSAdmin
+          - KMSUser
+          - SnsEmail
+          - DBUser
+          - DBPassword
+          - LambdaBucket
     ParameterLabels:
       AvailabilityZones:
         default: Availability Zones
 Parameters:
   AvailabilityZones:
-   Description: >-
+    Description: >-
       List of Availability Zones to use for the subnets in the VPC. Only two
       Availability Zones are used for this deployment, and the logical order of
       your selections is preserved.
-   Type: 'List<AWS::EC2::AvailabilityZone::Name>'
+    Type: 'List<AWS::EC2::AvailabilityZone::Name>'
   QSS3BucketName:
     AllowedPattern: "^[0-9a-zA-Z]+([0-9a-zA-Z-]*[0-9a-zA-Z])*$"
     ConstraintDescription: "Quick Start bucket name can include numbers, lowercase letters, uppercase letters, and hyphens (-). It cannot start or end with a hyphen (-)."
@@ -66,23 +68,18 @@ Parameters:
     Type: String
     MinLength: '1'
     MaxLength: '41'
-    AllowedPattern: '[a-zA-Z0-9]+'
-    ConstraintDescription: must contain only alphanumeric characters.
   KeyPairName:
     Description: The EC2 keypair to be used for the Auto Scaling Group
     Type: String
-  LambdaBucket:
-    Description: The bucket that your Lambda function writes to
-    Type: String
-  LambdaZipsBucket:
-    Description: The bucket where your Lambda function zipfile is stored
-    AllowedPattern: ^[0-9a-zA-Z]+([0-9a-zA-Z-]*[0-9a-zA-Z])*$
-    Type: String
 Conditions:
   GovCloudCondition:
-    Fn::Equals:
-    - Ref: AWS::Region
-    - us-gov-west-1
+    Fn::Or:
+      - !Equals
+        - !Ref AWS::Region
+        - "us-gov-east-1"
+      - !Equals
+        - !Ref AWS::Region
+        - "us-gov-west-1"
 Resources:
   VPCStack:
     Type: 'AWS::CloudFormation::Stack'
@@ -91,13 +88,14 @@ Resources:
         - https://${QSS3BucketName}.${QSS3Region}.amazonaws.com/${QSS3KeyPrefix}templates/vpc.yml
         - QSS3Region:
             Fn::If:
-            - GovCloudCondition
-            - s3-us-gov-west-1
-            - s3
+              - GovCloudCondition
+              - s3.us-gov-west-1
+              - s3.us-east-1
       Parameters:
-        AvailabilityZones: !Join 
-          - ','
-          - !Ref AvailabilityZones
+        AvailabilityZones:
+          Fn::Join:
+            - ','
+            - !Ref AvailabilityZones
   IRAPPROTECTEDStack:
     Type: 'AWS::CloudFormation::Stack'
     Properties:
@@ -105,9 +103,9 @@ Resources:
         - https://${QSS3BucketName}.${QSS3Region}.amazonaws.com/${QSS3KeyPrefix}templates/irap-protected.yml
         - QSS3Region:
             Fn::If:
-            - GovCloudCondition
-            - s3-us-gov-west-1
-            - s3
+              - GovCloudCondition
+              - s3-us-gov-west-1
+              - s3
       Parameters:
         KMSAdmin: !Ref KMSAdmin
         KMSUser: !Ref KMSUser
@@ -116,21 +114,16 @@ Resources:
         DBPassword: !Ref DBPassword
         KeyPairName: !Ref KeyPairName
         VPCID: !GetAtt VPCStack.Outputs.VPCID
-        LambdaZipsBucket: !Ref LambdaZipsBucket
-        LambdaBucket: !Ref LambdaBucket
         DatabaseSubnet1: !GetAtt VPCStack.Outputs.DatabaseSubnet1AID
         DatabaseSubnet2: !GetAtt VPCStack.Outputs.DatabaseSubnet2AID
-        DatabaseSubnet3: !GetAtt VPCStack.Outputs.DatabaseSubnet3AID
         PrivateSubnet1: !GetAtt VPCStack.Outputs.PrivateSubnet1AID
         PrivateSubnet2: !GetAtt VPCStack.Outputs.PrivateSubnet2AID
-        PrivateSubnet3: !GetAtt VPCStack.Outputs.PrivateSubnet3AID
         PublicSubnet1: !GetAtt VPCStack.Outputs.PublicSubnet1ID
         PublicSubnet2: !GetAtt VPCStack.Outputs.PublicSubnet2ID
-        PublicSubnet3: !GetAtt VPCStack.Outputs.PublicSubnet3ID
         LambdaSubnet1: !GetAtt VPCStack.Outputs.LambdaSubnet1AID
         LambdaSubnet2: !GetAtt VPCStack.Outputs.LambdaSubnet2AID
-        LambdaSubnet3: !GetAtt VPCStack.Outputs.LambdaSubnet3AID
-
+        QSS3BucketName: !Ref QSS3BucketName
+        QSS3KeyPrefix: !Ref QSS3KeyPrefix
 Outputs:
   URL:
     Description: URL of the website

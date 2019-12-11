@@ -6,7 +6,7 @@ Description: This template creates a Multi-AZ, multi-subnet VPC infrastructure w
   (ACLs). If you deploy the Quick Start in a region that doesn't support NAT gateways,
   NAT instances are deployed instead. **WARNING** This template creates AWS resources.
   You will be billed for the AWS resources used if you create a stack from this template.
-  QS(0027)
+  (qs-1q8ko8tkb)
 Metadata:
   AWS::CloudFormation::Interface:
     ParameterGroups:
@@ -195,7 +195,7 @@ Parameters:
     - '2'
     - '3'
     - '4'
-    Default: '3'
+    Default: '2'
     Description: Number of Availability Zones to use in the VPC. This must match your
       selections in the list of Availability Zones parameter.
     Type: String
@@ -2311,7 +2311,7 @@ Resources:
       Protocol: 6
       PortRange:
         From: 1024
-        To: 65535     
+        To: 65535
       RuleAction: allow
       RuleNumber: 115
   PrivateSubnetNetworkAclEntryOutbound:
@@ -2325,7 +2325,7 @@ Resources:
       Protocol: 6
       PortRange:
         From: 0
-        To: 65535    
+        To: 65535
       RuleAction: allow
       RuleNumber: 100
   PrivateSubnet1ANetworkAclAssociation:
@@ -2536,7 +2536,7 @@ Resources:
       Protocol: 6
       PortRange:
         From: 1024
-        To: 65535     
+        To: 65535
       RuleAction: allow
       RuleNumber: 115
   PrivateSubnetBNetworkAclEntryOutbound:
@@ -2550,7 +2550,7 @@ Resources:
       Protocol: 6
       PortRange:
         From: 0
-        To: 65535    
+        To: 65535
       RuleAction: allow
       RuleNumber: 100
   PrivateSubnet1BNetworkAclAssociation:
@@ -2757,7 +2757,7 @@ Resources:
       Protocol: 6
       PortRange:
         From: 80
-        To: 80    
+        To: 80
       RuleAction: allow
       RuleNumber: 100
   PublicSubnetNetworkAclEntryHTTPSOutbound:
@@ -2770,7 +2770,7 @@ Resources:
       Protocol: 6
       PortRange:
         From: 80
-        To: 443    
+        To: 443
       RuleAction: allow
       RuleNumber: 105
   PublicSubnetNetworkAclEntryEphemeralOutbound:
@@ -2783,7 +2783,7 @@ Resources:
       Protocol: 6
       PortRange:
         From: 0
-        To: 65535    
+        To: 65535
       RuleAction: allow
       RuleNumber: 110
   PublicSubnet1NetworkAclAssociation:
@@ -2939,285 +2939,178 @@ Outputs:
     Description: NAT 1 IP address
     Value:
       Ref: NAT1EIP
-    Export:
-      Name:
-        Fn::Sub: "${AWS::StackName}-NAT1EIP"
   NAT2EIP:
     Condition: PrivateSubnetsCondition
     Description: NAT 2 IP address
     Value:
       Ref: NAT2EIP
-    Export:
-      Name:
-        Fn::Sub: "${AWS::StackName}-NAT2EIP"
   NAT3EIP:
     Condition: PrivateSubnets&3AZCondition
     Description: NAT 3 IP address
     Value:
       Ref: NAT3EIP
-    Export:
-      Name:
-        Fn::Sub: "${AWS::StackName}-NAT3EIP"
   NAT4EIP:
     Condition: PrivateSubnets&4AZCondition
     Description: NAT 4 IP address
     Value:
       Ref: NAT4EIP
-    Export:
-      Name:
-        Fn::Sub: "${AWS::StackName}-NAT4EIP"
   DatabaseSubnet1AID:
     Condition: PrivateSubnetsCondition
     Description: Database subnet 1A ID in Availability Zone 1
     Value:
       Ref: DatabaseSubnet1A
-    Export:
-      Name: DatabaseSubnet1AID
   DatabaseSubnet2AID:
     Condition: PrivateSubnetsCondition
     Description: Database subnet 2A ID in Availability Zone 2
     Value:
       Ref: DatabaseSubnet2A
-    Export:
-      Name: DatabaseSubnet2AID
   DatabaseSubnet3AID:
     Condition: PrivateSubnets&3AZCondition
     Description: Database subnet 3A ID in Availability Zone 3
     Value:
       Ref: DatabaseSubnet3A
-    Export:
-      Name: DatabaseSubnet3AID
   DatabaseSubnet4AID:
     Condition: PrivateSubnets&4AZCondition
     Description: Database subnet 4A ID in Availability Zone 4
     Value:
       Ref: DatabaseSubnet4A
-    Export:
-      Name: DatabaseSubnet4AID
   LambdaSubnet1AID:
     Condition: PrivateSubnetsCondition
     Description: Lambda subnet 1A ID in Availability Zone 1
     Value:
       Ref: LambdaSubnet1A
-    Export:
-      Name:
-        Fn::Sub: "${AWS::StackName}-LambdaSubnet1AID"
   LambdaSubnet2AID:
     Condition: PrivateSubnetsCondition
     Description: Lambda subnet 2A ID in Availability Zone 2
     Value:
       Ref: LambdaSubnet2A
-    Export:
-      Name:
-        Fn::Sub: "${AWS::StackName}-LambdaSubnet2AID"
   LambdaSubnet3AID:
     Condition: PrivateSubnets&3AZCondition
     Description: Lambda subnet 3A ID in Availability Zone 3
     Value:
       Ref: LambdaSubnet3A
-    Export:
-      Name:
-        Fn::Sub: "${AWS::StackName}-LambdaSubnet3AID"
   LambdaSubnet4AID:
     Condition: PrivateSubnets&4AZCondition
     Description: Lambda subnet 4A ID in Availability Zone 4
     Value:
       Ref: LambdaSubnet4A
-    Export:
-      Name:
-        Fn::Sub: "${AWS::StackName}-LambdaSubnet4AID"
   PrivateSubnet1ACIDR:
     Condition: PrivateSubnetsCondition
     Description: Private subnet 1A CIDR in Availability Zone 1
     Value:
       Ref: PrivateSubnet1ACIDR
-    Export:
-      Name:
-        Fn::Sub: "${AWS::StackName}-PrivateSubnet1ACIDR"
   PrivateSubnet1AID:
     Condition: PrivateSubnetsCondition
     Description: Private subnet 1A ID in Availability Zone 1
     Value:
       Ref: PrivateSubnet1A
-    Export:
-      Name:
-        Fn::Sub: "${AWS::StackName}-PrivateSubnet1AID"
   PrivateSubnet1BCIDR:
     Condition: AdditionalPrivateSubnetsCondition
     Description: Private subnet 1B CIDR in Availability Zone 1
     Value:
       Ref: PrivateSubnet1BCIDR
-    Export:
-      Name:
-        Fn::Sub: "${AWS::StackName}-PrivateSubnet1BCIDR"
   PrivateSubnet1BID:
     Condition: AdditionalPrivateSubnetsCondition
     Description: Private subnet 1B ID in Availability Zone 1
     Value:
       Ref: PrivateSubnet1B
-    Export:
-      Name:
-        Fn::Sub: "${AWS::StackName}-PrivateSubnet1BID"
   PrivateSubnet2ACIDR:
     Condition: PrivateSubnetsCondition
     Description: Private subnet 2A CIDR in Availability Zone 2
     Value:
       Ref: PrivateSubnet2ACIDR
-    Export:
-      Name:
-        Fn::Sub: "${AWS::StackName}-PrivateSubnet2ACIDR"
   PrivateSubnet2AID:
     Condition: PrivateSubnetsCondition
     Description: Private subnet 2A ID in Availability Zone 2
     Value:
       Ref: PrivateSubnet2A
-    Export:
-      Name:
-        Fn::Sub: "${AWS::StackName}-PrivateSubnet2AID"
   PrivateSubnet2BCIDR:
     Condition: AdditionalPrivateSubnetsCondition
     Description: Private subnet 2B CIDR in Availability Zone 2
     Value:
       Ref: PrivateSubnet2BCIDR
-    Export:
-      Name:
-        Fn::Sub: "${AWS::StackName}-PrivateSubnet2BCIDR"
   PrivateSubnet2BID:
     Condition: AdditionalPrivateSubnetsCondition
     Description: Private subnet 2B ID in Availability Zone 2
     Value:
       Ref: PrivateSubnet2B
-    Export:
-      Name:
-        Fn::Sub: "${AWS::StackName}-PrivateSubnet2BID"
   PrivateSubnet3ACIDR:
     Condition: PrivateSubnets&3AZCondition
     Description: Private subnet 3A CIDR in Availability Zone 3
     Value:
       Ref: PrivateSubnet3ACIDR
-    Export:
-      Name:
-        Fn::Sub: "${AWS::StackName}-PrivateSubnet3ACIDR"
   PrivateSubnet3AID:
     Condition: PrivateSubnets&3AZCondition
     Description: Private subnet 3A ID in Availability Zone 3
     Value:
       Ref: PrivateSubnet3A
-    Export:
-      Name:
-        Fn::Sub: "${AWS::StackName}-PrivateSubnet3AID"
   PrivateSubnet3BCIDR:
     Condition: AdditionalPrivateSubnets&3AZCondition
     Description: Private subnet 3B CIDR in Availability Zone 3
     Value:
       Ref: PrivateSubnet3BCIDR
-    Export:
-      Name:
-        Fn::Sub: "${AWS::StackName}-PrivateSubnet3BCIDR"
   PrivateSubnet3BID:
     Condition: AdditionalPrivateSubnets&3AZCondition
     Description: Private subnet 3B ID in Availability Zone 3
     Value:
       Ref: PrivateSubnet3B
-    Export:
-      Name:
-        Fn::Sub: "${AWS::StackName}-PrivateSubnet3BID"
   PrivateSubnet4ACIDR:
     Condition: PrivateSubnets&4AZCondition
     Description: Private subnet 4A CIDR in Availability Zone 4
     Value:
       Ref: PrivateSubnet4ACIDR
-    Export:
-      Name:
-        Fn::Sub: "${AWS::StackName}-PrivateSubnet4ACIDR"
   PrivateSubnet4AID:
     Condition: PrivateSubnets&4AZCondition
     Description: Private subnet 4A ID in Availability Zone 4
     Value:
       Ref: PrivateSubnet4A
-    Export:
-      Name:
-        Fn::Sub: "${AWS::StackName}-PrivateSubnet4AID"
   PrivateSubnet4BCIDR:
     Condition: AdditionalPrivateSubnets&4AZCondition
     Description: Private subnet 4B CIDR in Availability Zone 4
     Value:
       Ref: PrivateSubnet4BCIDR
-    Export:
-      Name:
-        Fn::Sub: "${AWS::StackName}-PrivateSubnet4BCIDR"
   PrivateSubnet4BID:
     Condition: AdditionalPrivateSubnets&4AZCondition
     Description: Private subnet 4B ID in Availability Zone 4
     Value:
       Ref: PrivateSubnet4B
-    Export:
-      Name:
-        Fn::Sub: "${AWS::StackName}-PrivateSubnet4BID"
   PublicSubnet1CIDR:
     Description: Public subnet 1 CIDR in Availability Zone 1
     Value:
       Ref: PublicSubnet1CIDR
-    Export:
-      Name:
-        Fn::Sub: "${AWS::StackName}-PublicSubnet1CIDR"
   PublicSubnet1ID:
     Description: Public subnet 1 ID in Availability Zone 1
     Value:
       Ref: PublicSubnet1
-    Export:
-      Name:
-        Fn::Sub: "${AWS::StackName}-PublicSubnet1ID"
   PublicSubnet2CIDR:
     Description: Public subnet 2 CIDR in Availability Zone 2
     Value:
       Ref: PublicSubnet2CIDR
-    Export:
-      Name:
-        Fn::Sub: "${AWS::StackName}-PublicSubnet2CIDR"
   PublicSubnet2ID:
     Description: Public subnet 2 ID in Availability Zone 2
     Value:
       Ref: PublicSubnet2
-    Export:
-      Name:
-        Fn::Sub: "${AWS::StackName}-PublicSubnet2ID"
   PublicSubnet3CIDR:
     Condition: 3AZCondition
     Description: Public subnet 3 CIDR in Availability Zone 3
     Value:
       Ref: PublicSubnet3CIDR
-    Export:
-      Name:
-        Fn::Sub: "${AWS::StackName}-PublicSubnet3CIDR"
   PublicSubnet3ID:
     Condition: 3AZCondition
     Description: Public subnet 3 ID in Availability Zone 3
     Value:
       Ref: PublicSubnet3
-    Export:
-      Name:
-        Fn::Sub: "${AWS::StackName}-PublicSubnet3ID"
   PublicSubnet4CIDR:
     Condition: 4AZCondition
     Description: Public subnet 4 CIDR in Availability Zone 4
     Value:
       Ref: PublicSubnet4CIDR
-    Export:
-      Name:
-        Fn::Sub: "${AWS::StackName}-PublicSubnet4CIDR"
   PublicSubnet4ID:
     Condition: 4AZCondition
     Description: Public subnet 4 ID in Availability Zone 4
     Value:
       Ref: PublicSubnet4
-    Export:
-      Name:
-        Fn::Sub: "${AWS::StackName}-PublicSubnet4ID"
   VPCID:
     Value:
       Ref: VPC
     Description: VPC ID
-    Export:
-      Name:
-        Fn::Sub: "${AWS::StackName}-VPCCIDR"

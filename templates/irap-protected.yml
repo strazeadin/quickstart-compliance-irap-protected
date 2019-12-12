@@ -141,7 +141,7 @@ Conditions:
       - Fn::Equals:
           - !Ref AWS::Region
           - us-gov-west-1
-
+  GuardDutyEnabledCondition: !Equals [!Ref EnableGuardDuty, 'true']
 
 Parameters:
   QSS3BucketName:
@@ -378,8 +378,6 @@ Parameters:
     AllowedValues:
       - true
       - false
-Conditions:
-  GuardDutyEnabledCondition: !Equals [!Ref EnableGuardDuty, 'true']
 Resources:
   CopyZipsTemplate:
     Type: AWS::CloudFormation::Stack

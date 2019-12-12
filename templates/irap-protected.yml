@@ -8,17 +8,8 @@ Metadata:
   'AWS::CloudFormation::Interface':
     ParameterGroups:
       - Label:
-          default: General configuration
+          default: VPC Configuration
         Parameters:
-          - KMSAdmin
-          - KMSUser
-          - SnsEmail
-          - DBName
-          - DBUser
-          - DBPassword
-          - DBAllocatedStorage
-          - DBInstanceClass
-          - DBMultiAZ
           - VPCID
           - DatabaseSubnet1
           - DatabaseSubnet2
@@ -28,6 +19,21 @@ Metadata:
           - LambdaSubnet2
           - PublicSubnet1
           - PublicSubnet2
+      - Label:
+          default: Database configuration
+        Parameters:
+          - DBName
+          - DBUser
+          - DBPassword
+          - DBAllocatedStorage
+          - DBInstanceClass
+          - DBMultiAZ
+      - Label:
+          default: IRAP configuration
+        Parameters:
+          - KMSAdmin
+          - KMSUser
+          - SnsEmail
           - ASGInstanceType
           - KeyPairName
           - ImageId

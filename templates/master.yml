@@ -21,13 +21,22 @@ Metadata:
           - SnsEmail
           - DBUser
           - DBPassword
-          - LambdaBucket
           - EnableGuardDuty
     ParameterLabels:
-      AvailabilityZones:
-        default: Availability Zones
+      KMSAdmin:
+        default: IAM user with ability to administrative KMS key
+      KMSUser:
+        default: IAM user with ability to use KMS key
+      SnsEmail:
+        default: Email address to send Guard Duty alerts
+      DBUser:
+        default: The database admin account username
+      DBPassword:
+        default: The database password
       EnableGuardDuty:
         default: Enable Guard Duty Detector
+      AvailabilityZones:
+        default: Availability zones
 Parameters:
   AvailabilityZones:
     Description: >-

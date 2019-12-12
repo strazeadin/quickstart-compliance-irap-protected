@@ -30,6 +30,10 @@
     {
         "ParameterKey":"QSS3BucketName",
         "ParameterValue":"$[taskcat_autobucket]"
+    },
+    {
+        "ParameterKey":"EnableGuardDuty",
+        "ParameterValue":"false"
     }
   ]
   

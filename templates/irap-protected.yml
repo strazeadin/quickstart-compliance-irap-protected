@@ -50,6 +50,7 @@ Metadata:
           - CSRFExpectedHeader
           - CSRFExpectedSize
           - WAFTagPrefix
+          - EnableGuardDuty
     ParameterLabels:
       KMSUser:
         default: IAM user with ability to use KMS key
@@ -129,6 +130,8 @@ Metadata:
         default: The size in bytes of the CSRF token value
       WAFTagPrefix:
         default: Prefix to prepend to Tags for WAF
+      EnableGuardDuty:
+        default: Enable Guard Duty Detector
 Conditions:
   GovCloudCondition:
     Fn::Or:
@@ -368,6 +371,15 @@ Parameters:
     Description: The prefix to be applied to WAF rules
     Type: String
     Default: irapwaf
+  EnableGuardDuty:
+    Description: Do you wish to enable Guard Duty?
+    Type: String
+    Default: 'true'
+    AllowedValues:
+      - true
+      - false
+Conditions:
+  GuardDutyEnabledCondition: !Equals [!Ref EnableGuardDuty, 'true']
 Resources:
   CopyZipsTemplate:
     Type: AWS::CloudFormation::Stack
@@ -421,6 +433,7 @@ Resources:
         - Arn: !Ref SNSTopic
           Id: sns
   GuardDutyDetector:
+    Condition: GuardDutyEnabledCondition
     Type: AWS::GuardDuty::Detector
     Properties:
       Enable: true

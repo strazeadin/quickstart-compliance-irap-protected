@@ -22,9 +22,12 @@ Metadata:
           - DBUser
           - DBPassword
           - LambdaBucket
+          - EnableGuardDuty
     ParameterLabels:
       AvailabilityZones:
         default: Availability Zones
+      EnableGuardDuty:
+        default: Enable Guard Duty Detector
 Parameters:
   AvailabilityZones:
     Description: >-
@@ -71,6 +74,13 @@ Parameters:
   KeyPairName:
     Description: The EC2 keypair to be used for the Auto Scaling Group
     Type: String
+  EnableGuardDuty:
+    Description: Do you wish to enable Guard Duty?
+    Type: String
+    Default: 'true'
+    AllowedValues:
+      - true
+      - false
 Conditions:
   GovCloudCondition:
     Fn::Or:
@@ -124,6 +134,7 @@ Resources:
         LambdaSubnet2: !GetAtt VPCStack.Outputs.LambdaSubnet2AID
         QSS3BucketName: !Ref QSS3BucketName
         QSS3KeyPrefix: !Ref QSS3KeyPrefix
+        EnableGuardDuty: !Ref EnableGuardDuty
 Outputs:
   URL:
     Description: URL of the website

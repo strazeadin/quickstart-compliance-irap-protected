@@ -139,14 +139,6 @@ Metadata:
       EnableGuardDuty:
         default: Enable Guard Duty Detector
 Conditions:
-  GovCloudCondition:
-    Fn::Or:
-      - Fn::Equals:
-          - !Ref AWS::Region
-          - us-gov-east-1
-      - Fn::Equals:
-          - !Ref AWS::Region
-          - us-gov-west-1
   GuardDutyEnabledCondition: !Equals [!Ref EnableGuardDuty, 'true']
 
 Parameters:
@@ -389,12 +381,9 @@ Resources:
     Type: AWS::CloudFormation::Stack
     Properties:
       TemplateURL: !Sub
-          - https://${QSS3BucketName}.${QSS3Region}.amazonaws.com/${QSS3KeyPrefix}submodules/lambda-copyzips/templates/copy-zips.template.yaml
-          - QSS3Region:
-              Fn::If:
-                - GovCloudCondition
-                - s3-us-gov-west-1
-                - s3
+        - https://${QSS3BucketName}.${QSS3Region}.amazonaws.com/${QSS3KeyPrefix}submodules/lambda-copyzips/templates/copy-zips.template.yaml
+        - QSS3Region:
+            - s3
       Parameters:
         QSS3BucketName: !Ref 'QSS3BucketName'
         QSS3KeyPrefix: !Ref 'QSS3KeyPrefix'
@@ -509,10 +498,7 @@ Resources:
       TemplateURL: !Sub
         - https://${QSS3BucketName}.${QSS3Region}.amazonaws.com/${QSS3KeyPrefix}submodules/quickstart-amazon-aurora-mysql/templates/aurora_mysql.template.yaml
         - QSS3Region:
-            Fn::If:
-              - GovCloudCondition
-              - s3-us-gov-west-1
-              - s3
+            - s3
       Parameters:
         Subnet1ID: !Ref DatabaseSubnet1
         Subnet2ID: !Ref DatabaseSubnet2

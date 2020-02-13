@@ -23,9 +23,7 @@ The Quick Start sets up the following:
 
 This Quick Start assumes familiarity with the IRAP PROTECTED Reference Architecture. For more information, see [AWS Artifact](https://aws.amazon.com/artifact/) and [IRAP compliance](https://aws.amazon.com/compliance/irap/).
 
-This deployment guide also requires a moderate level of familiarity with AWS services. If you’re new to AWS, visit the [Getting Started Resource Center](https://aws.amazon.com/getting-started/) and the [AWS Training and Certification](https://aws.amazon.com/training/) website for materials and programs that can help you develop the skills to design, deploy, and operate your infrastructure and applications on the AWS Cloud.
-
-For architectural details, best practices, step-by-step instructions, and customization options, see the [deployment guide](https://fwd.aws/D9yDG).
+For architectural details, best practices, step-by-step instructions, and customization options, see the [deployment guide](https://fwd.aws/D9yDG). This guide requires a moderate level of familiarity with AWS services. If you’re new to AWS, visit the [Getting Started Resource Center](https://aws.amazon.com/getting-started/) and the [AWS Training and Certification](https://aws.amazon.com/training/) website for materials and programs that can help you develop the skills to design, deploy, and operate your infrastructure and applications on the AWS Cloud.
 
 To post feedback, submit feature ideas, or report bugs, use the **Issues** section of this GitHub repo.
 If you'd like to submit code for this Quick Start, please review the [AWS Quick Start Contributor's Kit](https://aws-quickstart.github.io/).

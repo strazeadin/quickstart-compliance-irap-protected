@@ -9,11 +9,6 @@ Metadata:
         Parameters:
           - AvailabilityZones
       - Label:
-          default: Quick Start configuration
-        Parameters:
-          - QSS3BucketName
-          - QSS3KeyPrefix
-      - Label:
           default: IRAP PROTECTED configuration
         Parameters:
           - KMSAdmin
@@ -22,6 +17,11 @@ Metadata:
           - DBUser
           - DBPassword
           - EnableGuardDuty
+      - Label:
+          default: Quick Start configuration
+        Parameters:
+          - QSS3BucketName
+          - QSS3KeyPrefix
     ParameterLabels:
       KMSAdmin:
         default: IAM user with ability to administrative KMS key
@@ -57,17 +57,17 @@ Parameters:
     Description: "S3 key prefix for the Quick Start assets. Quick Start key prefix can include numbers, lowercase letters, uppercase letters, hyphens (-), and forward slash (/)."
     Type: String
   KMSAdmin:
-    Description: User with ability to administer KMS key
+    Description: User with the ability to administer the KMS key
     Type: String
   KMSUser:
-    Description: User with ability to use KMS key
+    Description: User with the ability to use the KMS key
     Type: String
   SnsEmail:
-    Description: Specify destination for GuardDuty email alerts
+    Description: Destination for GuardDuty email alerts
     Type: String
   DBUser:
     NoEcho: 'true'
-    Description: The database admin account username
+    Description: Database administrator account user name.
     Type: String
     MinLength: '1'
     MaxLength: '16'
@@ -76,7 +76,7 @@ Parameters:
       characters.
   DBPassword:
     NoEcho: 'true'
-    Description: The database admin account password
+    Description: Database administrator account password
     Type: String
     MinLength: '1'
     MaxLength: '41'

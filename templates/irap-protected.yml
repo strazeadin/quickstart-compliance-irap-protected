@@ -10,6 +10,7 @@ Metadata:
       - Label:
           default: VPC Configuration
         Parameters:
+          - AvailabilityZones
           - VPCID
           - DatabaseSubnet1
           - DatabaseSubnet2
@@ -57,6 +58,11 @@ Metadata:
           - CSRFExpectedSize
           - WAFTagPrefix
           - EnableGuardDuty
+      - Label:
+          default: Quick Start configuration
+        Parameters:
+          - QSS3BucketName
+          - QSS3KeyPrefix
     ParameterLabels:
       KMSUser:
         default: IAM user with ability to use KMS key
@@ -138,6 +144,12 @@ Metadata:
         default: Prefix to prepend to Tags for WAF
       EnableGuardDuty:
         default: Enable Guard Duty Detector
+      QSS3BucketName:
+        default: Quick Start S3 bucket name
+      QSS3KeyPrefix:
+        default: Quick Start S3 key prefix
+      KeyPairName:
+        default: SSH key name
 Conditions:
   GuardDutyEnabledCondition: !Equals [!Ref EnableGuardDuty, 'true']
 

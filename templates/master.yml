@@ -37,6 +37,12 @@ Metadata:
         default: Enable Guard Duty Detector
       AvailabilityZones:
         default: Availability zones
+      QSS3BucketName:
+        default: Quick Start S3 bucket name
+      QSS3KeyPrefix:
+        default: Quick Start S3 key prefix
+      KeyPairName:
+        default: SSH key name
 Parameters:
   AvailabilityZones:
     Description: >-

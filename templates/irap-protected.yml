@@ -385,16 +385,15 @@ Parameters:
     Type: String
     Default: 'true'
     AllowedValues:
-      - true
-      - false
+      - "true"
+      - "false"
 Resources:
   CopyZipsTemplate:
     Type: AWS::CloudFormation::Stack
     Properties:
       TemplateURL: !Sub
         - https://${QSS3BucketName}.${QSS3Region}.amazonaws.com/${QSS3KeyPrefix}submodules/lambda-copyzips/templates/copy-zips.template.yaml
-        - QSS3Region:
-            - s3
+        - QSS3Region: s3
       Parameters:
         QSS3BucketName: !Ref 'QSS3BucketName'
         QSS3KeyPrefix: !Ref 'QSS3KeyPrefix'
@@ -508,8 +507,7 @@ Resources:
     Properties:
       TemplateURL: !Sub
         - https://${QSS3BucketName}.${QSS3Region}.amazonaws.com/${QSS3KeyPrefix}submodules/quickstart-amazon-aurora-mysql/templates/aurora_mysql.template.yaml
-        - QSS3Region:
-            - s3
+        - QSS3Region: s3
       Parameters:
         Subnet1ID: !Ref DatabaseSubnet1
         Subnet2ID: !Ref DatabaseSubnet2

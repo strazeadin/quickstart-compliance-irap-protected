@@ -114,8 +114,8 @@ Resources:
         - QSS3Region:
             Fn::If:
               - GovCloudCondition
-              - s3.us-gov-west-1
-              - s3.us-east-1
+              - s3-us-gov-west-1
+              - s3
       Parameters:
         AvailabilityZones:
           Fn::Join:

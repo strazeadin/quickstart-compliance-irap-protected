@@ -92,7 +92,7 @@ Parameters:
   EnableGuardDuty:
     Description: Do you wish to enable Guard Duty?
     Type: String
-    Default: 'true'
+    Default: true
     AllowedValues:
       - true
       - false

@@ -501,7 +501,6 @@ Resources:
           Value:
             Fn::Sub: ${AWS::StackName}-RDS-SG
       VpcId: !Ref VPCID
-  # TODO: Aurora Submodule
   AuroraStack:
     Type: 'AWS::CloudFormation::Stack'
     Properties:

@@ -1,0 +1,26 @@
+project:
+  name: quickstart-compliance-irap-protected
+  owner: quickstart-eng@amazon.com
+  package_lambda: false
+  regions:
+  - us-east-1
+  - ap-southeast-2
+  - ap-southeast-1
+  - us-west-2
+  s3_bucket: ''
+tests:
+  quickstart-compliance-irap-protected:
+    parameters:
+      AvailabilityZones: $[taskcat_genaz_3]
+      DBPassword: $[taskcat_genpass_8S]
+      DBUser: dbuser
+      EnableGuardDuty: 'false'
+      KMSAdmin: override
+      KMSUser: override
+      KeyPairName: override
+      QSS3BucketName: $[taskcat_autobucket]
+      SnsEmail: email@example.com
+    regions:
+    - us-east-1
+    s3_bucket: ''
+    template: templates/master.yml

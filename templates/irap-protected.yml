@@ -1094,7 +1094,7 @@ Resources:
     Type: 'AWS::CloudFormation::Stack'
     Properties:
       TemplateURL: !Sub
-        - https://${QSS3BucketName}.${QSS3Region}.amazonaws.com/${QSS3KeyPrefix}templates/aws-waf-security-automations.template'
+        - https://${QSS3BucketName}.${QSS3Region}.amazonaws.com/${QSS3KeyPrefix}templates/aws-waf-security-automations.template
         - QSS3Region: s3
       Parameters:
         ActivateAWSManagedRulesParam: 'yes'

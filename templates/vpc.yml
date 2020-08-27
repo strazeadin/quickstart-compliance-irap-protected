@@ -633,13 +633,13 @@ Resources:
     Type: AWS::S3::Bucket
     DeletionPolicy: Retain
   VPCFlowLog:
-  Type: AWS::EC2::FlowLog
-  Properties:
-    LogDestinationType: s3
-    LogDestination: !GetAtt FlowLogBucket.Arn
-    ResourceId: !Ref VPC
-    ResourceType: VPC
-    TrafficType: ALL
+    Type: AWS::EC2::FlowLog
+    Properties:
+      LogDestinationType: 's3'
+      LogDestination: !GetAtt FlowLogBucket.Arn
+      ResourceId: !Ref VPC
+      ResourceType: 'VPC'
+      TrafficType: 'ALL'
 
 
   VPCDHCPOptionsAssociation:
